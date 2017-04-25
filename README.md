@@ -15,6 +15,6 @@ Python Wrapper for TrueCaller
 ### CentOS (FreePBX)
 
 ```
-sudo wget -qO- https://github.com/scottphilip/caller-lookup/blob/master/Install-CentOS.sh | bash
+sudo wget -qO- https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install-CentOS.sh | bash
 ```
 
