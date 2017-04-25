@@ -88,7 +88,9 @@ class CallerLookup extends superfecta_base
     $this->DebugPrint(sprintf("CallerLookup: Add To Phonebook? -> %s", $is_add_phonebook?"Yes":"No"));
     $this->DebugPrint(sprintf("CallerLookup: Add To Blacklist? -> %s", $is_add_blacklist?"Yes":"No"));
 
-    $script_path = '/var/lib/asterisk/agi-bin/CallerLookup.py'
+    //TODO: Path
+    $script_path = '/usr/bin/CallerLookup.py'
+
     $command = sprintf("python %s --number %s --region %s --username %s --password %s %s",
                     $script_path,
                     $thenumber,
