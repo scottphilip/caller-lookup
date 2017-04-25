@@ -23,12 +23,12 @@ class ReverseLookup(object):
 
     Url_Query = 'https://www.truecaller.com/api/search?%s'
 
-    def __init__(self, setting_path, log_path, is_debug):
+    def __init__(self, settings):
 
         global log_helper
-        log_helper = self.LogHelper(log_path, is_debug)
+        log_helper = self.LogHelper(settings["log_path"], settings["is_debug"])
 
-        self._Generator = self.TokenGenerator(setting_path)
+        self._Generator = self.TokenGenerator(settings)
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
     @staticmethod
@@ -124,7 +124,7 @@ class ReverseLookup(object):
 
         log_helper.info("Search: {} ({})".format(number, default_region))
 
-        result = {"Result": "Unknown",
+        result = {"Result": "unknown",
                   "Number": number,
                   "Region": default_region,
                   "Name": "",
@@ -147,18 +147,18 @@ class ReverseLookup(object):
                         data = response["data"][0]
                         if data is not None:
 
-                            if "name" in data:
-                                result["Name"] = data["name"]
-                                result["Result"] = "Success"
-
                             if "score" in data:
                                 result["Score"] = data["score"]
+
+                            if "name" in data:
+                                result["Name"] = data["name"]
+                                result["Result"] = "success"
             else:
 
-                result["Result"] = "Invalid"
+                result["Result"] = "invalid"
 
         except Exception as e:
-            result["Result"] = "Error"
+            result["Result"] = "error"
             result["Error"] = str(e)
 
         log_helper.info("Search Result: {}".format(str(result)))
@@ -176,15 +176,21 @@ class ReverseLookup(object):
                        "%20https://www.googleapis.com/auth/userinfo.profile%20https://www.google.com/m8/feeds/ " \
             .format(url_accounts)
 
-        def __init__(self, setting_path):
-            self.setting_path = setting_path
-            self.username = ReverseLookup.Utils.get_setting(setting_path, "Credentials", "Username")
-            self.password = ReverseLookup.Utils.get_setting(setting_path, "Credentials", "Password")
+        def __init__(self, settings):
+            self.setting_path = settings["setting_path"]
+            if "username" in settings:
+                self.username = settings["username"]
+                if not "password" in settings:
+                    raise Exception("Password must be supplied with username")
+                self.password = settings["password"]
+            else:
+                self.username = ReverseLookup.Utils.get_setting(self.setting_path, "Credentials", "Username")
+                self.password = ReverseLookup.Utils.get_setting(self.setting_path, "Credentials", "Password")
 
         def validate(self):
-            if self.username is None:
+            if not self.username :
                 raise Exception("Username setting in %s is unset" % self.setting_path)
-            if self.password is None:
+            if not self.password:
                 raise Exception("Password setting in %s is unset" % self.setting_path)
             log_helper.debug("Setting Validation Passed")
 
@@ -340,19 +346,10 @@ class ReverseLookup(object):
 
     class LogHelper(object):
 
-        class Flag:
-            HEADER = '\033[95m'
-            OKBLUE = '\033[94m'
-            OKGREEN = '\033[92m'
-            WARNING = '\033[93m'
-            FAIL = '\033[91m'
-            ENDC = '\033[0m'
-            BOLD = '\033[1m'
-            UNDERLINE = '\033[4m'
-
         def __init__(self, path, is_debug=False):
             self.path = path
-
+            if not os.path.exists(path):
+                os.makedirs(path)
             self._log = logging.getLogger(__name__)
             handler = logging.FileHandler(os.path.join(path, "CallerLookup.log"))
             formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
@@ -384,12 +381,13 @@ class ReverseLookup(object):
 log_helper = None
 
 if __name__ == "__main__":
+
     parser = argparse.ArgumentParser(description='Reverse Caller Id')
 
     parser.add_argument("--number",
                         dest="phone_number",
                         help="Phone number accepted in any standard format. When not in international format, the \
-                              default region parameter must be supplied",
+                                  default region parameter must be supplied",
                         required=True)
 
     parser.add_argument("--region",
@@ -406,6 +404,16 @@ if __name__ == "__main__":
                         default="CallerLookup.ini",
                         required=False)
 
+    parser.add_argument("--username",
+                        help="Google Account Username",
+                        dest="username",
+                        required=False)
+
+    parser.add_argument("--password",
+                        help="Google Account Password",
+                        dest="password",
+                        required=False)
+
     parser.add_argument("--logdir",
                         help="Path to Log Directory",
                         dest="log_path",
@@ -418,7 +426,17 @@ if __name__ == "__main__":
                         dest="is_debug")
 
     args = vars(parser.parse_args())
-    lookup = ReverseLookup(args["setting_path"], args["log_path"], args["is_debug"])
-    result = lookup.search(args["phone_number"], args["default_region"])
 
-    print(json.dumps(result, indent=2))
+    try:
+
+        lookup = ReverseLookup(args)
+        result = lookup.search(args["phone_number"], args["default_region"])
+
+        print(str(result))
+        exit(0)
+
+    except Exception as e:
+
+        print(str({"Result": "Error", "Error": str(e)}))
+        exit(1)
+
