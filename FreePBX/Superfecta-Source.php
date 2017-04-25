@@ -1,6 +1,35 @@
 <?php
 
-class CallerLookup extends superfecta_base{
+class DatabaseAction extends Thread
+{
+
+    public function __construct($db, $key, $value)
+    {
+        $this->db = $db;
+        $this->key = $key;
+        $this->value = $value;
+    }
+
+    function run()
+    {
+        global $amp_conf;
+        global $astman;
+
+        if ($astman)
+        {
+            if (!$astman->database_get($this->db,$this->key)) {
+                $astman->database_put($this->db,$this->key, $this->value);
+            }
+        }
+        else
+        {
+            fatal("Cannot connect to Asterisk Manager with ".$amp_conf["AMPMGRUSER"]."/".$amp_conf["AMPMGRPASS"]);
+        }
+    }
+}
+
+class CallerLookup extends superfecta_base
+{
 
   public $description = "CallerLookup (TrueCaller)";
   public $version_requirement = "2.11";
@@ -39,7 +68,8 @@ class CallerLookup extends superfecta_base{
     )
   );
 
-  function get_caller_id($thenumber, $run_param=array()) {
+  function get_caller_id($thenumber, $run_param=array())
+  {
 
     $this->spam = false;
     $is_debug = $this->debug;
@@ -69,34 +99,52 @@ class CallerLookup extends superfecta_base{
     exec($command, $output, $return_var);
     $this->DebugPrint(sprintf("CallerLookup: Result Code -> %s", $return_var));
 
-    if ($return_var == 0) {
+    if ($return_var == 0)
+    {
 
         $this->DebugPrint(sprintf("CallerLookup: Result Data -> %s", $output));
         $result = json_decode($output, true);
 
-        if (isset($result['Result']) && $result['Result'] == "success") {
+        if (isset($result['Result']) && $result['Result'] == "success")
+        {
 
-            if (isset($result['Score']) && $result['Score'] >= 0) {
-                if (($result['Score'] * 10) < $spam_threshold) {
+            if (isset($result['Score']) && $result['Score'] >= 0)
+            {
+                if (($result['Score'] * 10) < $spam_threshold)
+                {
                     $this->spam = true;
                 }
             }
 
-            if (issset($result['Name']) && len($result['Name']) > 0) {
+            if (issset($result['Name']) && len($result['Name']) > 0)
+            {
                 $result_name = $result['Name'];
             }
 
-            if ($this->spam) {
+            if ($this->spam)
+
+
                 if ($is_add_blacklist) {
+
                     if (is_null($result_name)) {
                         $result_name = "SPAM";
                     }
-                    $this->DebugPrint("CallerLookup: Blacklisting - $result_name ($thenumber)");
-                    #TODO: Add Blacklisting
+
+                    $this->DebugPrint("CallerLookup: Blacklist - $result_name ($thenumber)");
+                    $bl_thread = new DatabaseAction('blacklist', trim($thenumber), trim($result_name));
+                    $bl_thread.start();
+
                 }
-            } else {
+            }
+            else
+            {
+
                 if ($is_add_phonebook && !is_null($result_name)) {
-                    #TODO: Add Phonebook
+
+                    $this->DebugPrint("CallerLookup: Phonebook - $result_name ($thenumber)");
+                    $bl_thread = new DatabaseAction('cidname', trim($thenumber), trim($result_name));
+                    $bl_thread.start();
+
                 }
             }
         }
@@ -105,3 +153,5 @@ class CallerLookup extends superfecta_base{
 	return is_null($result_name) ? "" : $result_name;
   }
 }
+
+?>
