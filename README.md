@@ -7,5 +7,3 @@
  * Google Account Authentication
  * FreePBX Superfecta Source Module
  * Asterisk AGI CName Script
-
-##Known Issues
