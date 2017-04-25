@@ -27,7 +27,6 @@ class ReverseLookup(object):
 
         global log_helper
         log_helper = self.LogHelper(settings["log_path"], settings["is_debug"])
-
         self._Generator = self.TokenGenerator(settings)
         requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
@@ -188,10 +187,14 @@ class ReverseLookup(object):
                 self.password = ReverseLookup.Utils.get_setting(self.setting_path, "Credentials", "Password")
 
         def validate(self):
+
+            if not os.path.isfile(self.setting_path) and not self.username:
+                raise Exception("Missing Configuration File")
             if not self.username :
-                raise Exception("Username setting in %s is unset" % self.setting_path)
+                raise Exception("Username not supplied either as parameter or in setting config %s" % self.setting_path)
             if not self.password:
-                raise Exception("Password setting in %s is unset" % self.setting_path)
+                raise Exception("Password not supplied either as parameter or in setting config %s" % self.setting_path)
+
             log_helper.debug("Setting Validation Passed")
 
         def create_token(self, username, password):
@@ -346,13 +349,15 @@ class ReverseLookup(object):
 
     class LogHelper(object):
 
-        def __init__(self, path, is_debug=False):
-            self.path = path
-            if not os.path.exists(path):
-                os.makedirs(path)
-            self._log = logging.getLogger(__name__)
-            handler = logging.FileHandler(os.path.join(path, "CallerLookup.log"))
-            formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+        def __init__(self, logpath, is_debug=False):
+            self.path = os.path.dirname(logpath)
+            if len(self.path) > 0:
+                if not os.path.exists(self.path):
+                    os.makedirs(self.path)
+
+            self._log = logging.getLogger(logpath)
+            handler = logging.FileHandler(logpath)
+            formatter = logging.Formatter('%(logpath)s %(levelname)s %(message)s')
             handler.setFormatter(formatter)
             self._log.addHandler(handler)
             self._log.setLevel(logging.INFO)
@@ -384,6 +389,8 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description='Reverse Caller Id')
 
+    default_directory = os.path.join(os.path.expanduser("~"), ".CallerLookup")
+
     parser.add_argument("--number",
                         dest="phone_number",
                         help="Phone number accepted in any standard format. When not in international format, the \
@@ -401,7 +408,7 @@ if __name__ == "__main__":
     parser.add_argument("--settings",
                         help="Path to Settings INI file",
                         dest="setting_path",
-                        default="CallerLookup.ini",
+                        default=os.path.join(default_directory, "CallerLookup.ini"),
                         required=False)
 
     parser.add_argument("--username",
@@ -414,10 +421,10 @@ if __name__ == "__main__":
                         dest="password",
                         required=False)
 
-    parser.add_argument("--logdir",
+    parser.add_argument("--logpath",
                         help="Path to Log Directory",
                         dest="log_path",
-                        default="logs",
+                        default=os.path.join(default_directory, "CallerLookup.log"),
                         required=False)
 
     parser.add_argument("--debug",
