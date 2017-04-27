@@ -10,16 +10,18 @@ NC='\033[0m'
 if [ "$EUID" -ne 0 ]
 then
 	printf "${RED}This must be run as root or with sudo.{NC}\n"
-    exit;
+    exit
 fi
 
 read -r -p "Are you sure you want to install CallerLookup and its dependencies? [y/N] " response
-if [[ "$response" =~ ^([yY][eE][sS]|[yY])+$ ]]
-then
-    printf "${GREEN}Starting installation...{NC}\n"
-else
-    exit
-fi
+case "$response" in
+    [yY][eE][sS]|[yY])
+        printf "${GREEN}Starting installation...{NC}\n"
+        ;;
+    *)
+        exit
+        ;;
+esac
 
 printf "${GREEN}Updating Packages...{NC}\n"
 /usr/bin/yum update
