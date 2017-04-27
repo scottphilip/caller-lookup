@@ -213,18 +213,21 @@ class ReverseLookup(object):
                 oauth_data = urllib.parse.parse_qs(query_string_data)
                 oauth_token = oauth_data["access_token"][0]
                 log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Oauth Token", oauth_token))
-                request_data = {"accessToken": oauth_token}
-                handler.http_get(ReverseLookup.url_token_callback, None)
+                request_data = '{"accessToken":"'+oauth_token+'"}'
+                handler.http_get(redirect_location, None)
                 (token_res_code, token_res_data, token_res_header) = handler \
-                    .http_post(ReverseLookup.url_token, request_data, {"content-type": "application/json",
-                                                                       "content-length": len(request_data),
+                    .http_post(ReverseLookup.url_token, request_data, {#"content-length":len(str(request_data)),
+                    "content-type": "application/json",
                                                                        "referer": "https://www.truecaller.com/auth/google/callback",
                                                                        "origin": "https://www.truecaller.com"})
                 if token_res_code != 200:
                     return None
-                refreshed_token = json.load(token_res_data)["accessToken"]
-                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Success", refreshed_token))
-                return refreshed_token
+                refreshed_token = json.loads(token_res_data)
+                if not "accessToken" in refreshed_token:
+                    return None
+                refreshed_access_token = refreshed_token["accessToken"]
+                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Success", refreshed_access_token))
+                return refreshed_access_token
 
             def _get_restart_token():
                 def wait_for(condition_function, timeout):
@@ -397,12 +400,11 @@ class ReverseLookup(object):
             self.storage_path = storage_path
 
         def __enter__(self):
-            self._cookiejar = http.cookiejar.MozillaCookieJar(
-                filename=self.storage_path,
-                policy=http.cookiejar.DefaultCookiePolicy())
-            # self._cookiejar.set_policy(http.cookiejar.DefaultCookiePolicy())
-            # if os.path.isfile(self.storage_path):
-            #     self._cookiejar.load(self.storage_path)
+            self._cookiejar = http.cookiejar.MozillaCookieJar()
+            if os.path.isfile(self.storage_path):
+                self._cookiejar.load(self.storage_path, ignore_discard=True)
+            self._opener = urllib.request.build_opener(ReverseLookup.HttpHandler.NoRedirect,
+                                                 urllib.request.HTTPCookieProcessor(self._cookiejar))
             return self
 
         def __exit__(self, exc_type, exc_val, exc_tb):
@@ -415,16 +417,7 @@ class ReverseLookup(object):
                 result.update(append_headers)  # result.update(append_headers)
             if include_default:
                 result.update(ReverseLookup.default_headers)
-                # for key, value in ReverseLookup.default_headers:
-                #     item = (key, value)
-                #     result.append(item)
             return result
-
-        def _get_opener(self):
-            opener = urllib.request.build_opener(ReverseLookup.HttpHandler.NoRedirect,
-                                                 urllib.request.HTTPCookieProcessor(self._cookiejar))
-
-            return opener
 
         def http_get(self, url, headers=None, include_default_headers=True):
             return self._http_request("GET", url, None, headers, include_default_headers)
@@ -433,23 +426,32 @@ class ReverseLookup(object):
             return self._http_request("POST", url, data, headers, include_default_headers)
 
         def _http_request(self, method, url, data=None, headers=None, include_default_headers=True):
+
+
             log_helper.debug("===================")
             log_helper.debug("    {} REQUEST".format(method))
             log_helper.debug("===================")
             log_helper.debug("{:20s} {}".format("URL", url))
-            if not data is None:
-                log_helper.debug("{:20s} \n{}".format("DATA", json.dumps(data, indent=4, sort_keys=True)))
 
-            cookie_processor = urllib.request.HTTPCookieProcessor(self._cookiejar)
             add_headers = self.get_headers(headers, include_default_headers)
-            request = urllib.request.Request(url, data=None, headers=add_headers, method=method)
-            opener = urllib.request.build_opener(ReverseLookup.HttpHandler.NoRedirect,
-                                                 cookie_processor)
-            request = cookie_processor.http_request(request)
+            encoded_data = None
+            if not data is None:
+                encoded_data = bytes(data, "utf-8")
+                #encoded_data = gzip.compress(data)
+                #encoded_data = str(data).encode('utf-8')
+                add_headers.update({"content-length": len(encoded_data)})
 
-            log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(request.headers, indent=4, sort_keys=True)))
+            request = urllib.request.Request(url, data=encoded_data, headers=add_headers, method=method)
 
-            response = opener.open(request)
+            if not data is None:
+                log_helper.debug("{:20s} \n{}".format("DATA", data))
+                log_helper.debug("{:20s} \n{}".format("DATA (Encoded)", encoded_data))
+
+            try:
+                response = self._opener.open(request)
+            finally:
+                log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(request.header_items(),
+                                                                            indent=4, sort_keys=True)))
 
             log_helper.debug("===================")
             log_helper.debug("    {} RESPONSE".format(method))
@@ -463,12 +465,14 @@ class ReverseLookup(object):
                 result_dict[key].append(value)
             log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(result_dict, indent=4, sort_keys=True)))
             if response_headers.get('Content-Encoding') == 'gzip':
-                response_data = gzip.GzipFile(fileobj=response).read()
+                response_data = gzip.GzipFile(fileobj=response).read().decode("utf-8")
             else:
                 response_data = response.read()
             log_helper.debug("{:20s} {}".format("DATA", response_data))
 
             return response_code, response_data, response_headers
+
+
 
         def get_cookies(self, full_url):
             url = urllib.parse.urlparse(full_url)
@@ -485,7 +489,7 @@ class ReverseLookup(object):
                 self._cookiejar.set_cookie(self._get_cookie(c))
 
         def save_cookies(self):
-            self._cookiejar.save(self.storage_path, ignore_discard=True)
+            self._cookiejar.save(self.storage_path, ignore_discard=True, )
 
         @staticmethod
         def _get_cookie(item):
