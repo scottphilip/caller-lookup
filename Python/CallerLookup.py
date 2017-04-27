@@ -14,13 +14,14 @@ import urllib.request
 
 import phonenumbers
 import requests.cookies
+import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
 from selenium.webdriver.support.ui import WebDriverWait
 
 
-class ReverseLookup(object):
+class CallerLookup(object):
     user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/33.0.1750.152 Chrome/33.0.1750.152 Safari/537.36"
     default_headers = {"Accept": "application/json, text/plain, */*",
                        "Accept-Language": "en-US",
@@ -39,10 +40,18 @@ class ReverseLookup(object):
         log_helper.debug("#############################################################################")
         log_helper.debug("{:20} {}".format("ARGS", str(settings)))
 
-        self._generator = ReverseLookup.TokenGenerator(settings)
+        self._generator = CallerLookup.TokenGenerator(settings)
         self.settings = settings
 
     def search(self, phone_number, default_region):
+        start = time.time()
+        result = self._search(phone_number, default_region)
+        elapsed = time.time() - start
+        if self.settings["is_debug"]:
+            result["time_taken"] = str(elapsed)
+        return result
+
+    def _search(self, phone_number, default_region):
 
         def format_phone_number(format_number, format_region):
             format_valid = False
@@ -50,8 +59,6 @@ class ReverseLookup(object):
                 phone_number = phonenumbers.parse(format_number, format_region.upper())
                 format_region = get_phone_number_region(str(phone_number.country_code), format_region).upper()
                 format_number = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
-                if format_number.startswith("+"):
-                    format_number = format_number[1:]
                 format_valid = phonenumbers.is_valid_number(phone_number)
             except:
                 ignore = True
@@ -101,16 +108,19 @@ class ReverseLookup(object):
             query = self.url_search.format(urllib.parse.urlencode({"type": 4,
                                                                    "countryCode": default_region,
                                                                    "q": phone_number}))
-            with ReverseLookup.HttpHandler(self.settings["cookies_path"], ReverseLookup.user_agent) as handler:
+            with CallerLookup.HttpHandler(self.settings["cookies_path"], CallerLookup.user_agent) as handler:
                 while fail_count <= 1:
                     ignore_cache = fail_count > 0
                     token = self._generator.token(handler, ignore_cache)
+                    if token is None:
+                        fail_count += 1
+                        continue
                     (token_res_code, token_res_data, token_res_header) = handler.http_get(query, [
                         ("Authorization", "Bearer {}".format(token)),
                         ("Host", "www.truecaller.com"),
                         ("Referer", "https://www.truecaller.com/")])
                     if token_res_code == 200:
-                        return self._format_data(token_res_data)
+                        return self._format_data(token_res_data, phone_number, default_region)
                     elif token_res_code == 401:
                         log_helper.info("Token {} has expired.".format(token))
                     else:
@@ -124,8 +134,29 @@ class ReverseLookup(object):
             log_helper.error(str(e))
             raise
 
-    def _format_data(self, data):
-        result = {}
+    def _format_data(self, result_data, phone_number, default_region):
+        result = {"result": "unknown",
+                  "number": phone_number,
+                  "region": default_region}
+        data = json.loads(result_data)
+        if "data" in data:
+            data = data["data"]
+        if len(data) > 0:
+            data = data[0]
+        if "score" in data:
+            result["score"] = data["score"]
+        if "addresses" in data:
+            addresses = data["addresses"]
+            if len(addresses) > 0:
+                if "countryCode" in addresses[0]:
+                    result["region"] = addresses[0]["countryCode"].upper()
+        if "name" in data:
+            result["name"] = data["name"]
+            result["result"] = "success"
+            log_helper.info("{:20s} {:30s} {}".format("SEARCH",
+                                                      "RESULT",
+                                                      str(result)))
+            return result
         return result
 
     def _get_search_result(self, url, token):
@@ -147,10 +178,10 @@ class ReverseLookup(object):
         @staticmethod
         def get_url():
             return "{}://{}{}?{}" \
-                .format(ReverseLookup.OAuthRequest.protocol,
-                        ReverseLookup.OAuthRequest.domain,
-                        ReverseLookup.OAuthRequest.path,
-                        urllib.parse.urlencode(ReverseLookup.OAuthRequest.data))
+                .format(CallerLookup.OAuthRequest.protocol,
+                        CallerLookup.OAuthRequest.domain,
+                        CallerLookup.OAuthRequest.path,
+                        urllib.parse.urlencode(CallerLookup.OAuthRequest.data))
 
     class TokenGenerator(object):
 
@@ -158,7 +189,6 @@ class ReverseLookup(object):
         url_myaccount = "https://myaccount.google.com"
         url_accounts_servicelogin = "{}/ServiceLogin".format(url_accounts)
         url_accounts_noform = "{}/x".format(url_accounts)
-        url_token = "https://www.truecaller.com/api/auth/google?clientId=4"
 
         def __init__(self, settings):
 
@@ -170,25 +200,32 @@ class ReverseLookup(object):
                 if not "password" in settings:
                     raise Exception("Password must be supplied with username")
                 self.password = settings["password"]
+                if "otpsecret" in settings:
+                    self.otpsecret = settings["otpsecret"]
+                else:
+                    self.otpsecret = None
 
             else:
 
-                self.username = ReverseLookup.SettingHelper \
+                self.username = CallerLookup.SettingHelper \
                     .get_setting(self.setting_path, "Credentials", "username")
                 if self.username is None:
                     raise Exception("Configuration Error.  Username is not set {}".format(self.setting_path))
 
-                self.password = ReverseLookup.SettingHelper \
+                self.password = CallerLookup.SettingHelper \
                     .get_setting(self.setting_path, "Credentials", "password")
                 if self.password is None:
                     raise Exception("Configuration Error.  Password is not set {}".format(self.setting_path))
 
+                self.otpsecret = CallerLookup.SettingHelper \
+                    .get_setting(self.setting_path, "Credentials", "otpsecret")
+
         def token(self, handler, ignore_cache=False):
             if not ignore_cache:
-                cache_date = ReverseLookup.SettingHelper.get_setting(self.setting_path, "Cache", "TokenExpiry")
+                cache_date = CallerLookup.SettingHelper.get_setting(self.setting_path, "Cache", "TokenExpiry")
                 if cache_date is not None and datetime.datetime.strptime(cache_date, "%Y-%m-%d %H:%M:%S") \
                         > datetime.datetime.now():
-                    token = ReverseLookup.SettingHelper.get_setting(self.setting_path, "Cache", "Token")
+                    token = CallerLookup.SettingHelper.get_setting(self.setting_path, "Cache", "Token")
                     log_helper.debug("Cached Token: " + token)
                     return token
             return self._get_new_token(handler)
@@ -196,7 +233,7 @@ class ReverseLookup(object):
         def _get_new_token(self, handler):
 
             def _get_refreshed_token():
-                url = ReverseLookup.OAuthRequest.get_url()
+                url = CallerLookup.OAuthRequest.get_url()
                 if not handler.is_cookie_available(url):
                     return None
                 (oauth_res_code, oauth_res_data, oauth_res_header) = handler.http_get(url)
@@ -216,7 +253,7 @@ class ReverseLookup(object):
                 request_data = '{"accessToken":"'+oauth_token+'"}'
                 handler.http_get(redirect_location, None)
                 (token_res_code, token_res_data, token_res_header) = handler \
-                    .http_post(ReverseLookup.url_token, request_data, {#"content-length":len(str(request_data)),
+                    .http_post(CallerLookup.url_token, request_data, {#"content-length":len(str(request_data)),
                     "content-type": "application/json",
                                                                        "referer": "https://www.truecaller.com/auth/google/callback",
                                                                        "origin": "https://www.truecaller.com"})
@@ -239,15 +276,22 @@ class ReverseLookup(object):
                             time.sleep(0.1)
                     return False
 
+                def get_otp():
+                    if self.otpsecret is None:
+                        save_screenshot("TwoFactorAuth")
+                        raise Exception("Sign in requires Two Step authentication but otpsecret has not been set.")
+                    import pyotp
+                    return pyotp.TOTP(self.otpsecret)
+
                 def is_token_created():
                     return driver.execute_script("return localStorage.getItem('tcToken') != null")
 
                 def restore_cookies():
                     log_helper.debug("Restoring Cookies...")
-                    cookies = handler.get_cookies(ReverseLookup.TokenGenerator.url_accounts_noform)
+                    cookies = handler.get_cookies(CallerLookup.TokenGenerator.url_accounts_noform)
                     if cookies is None or len(cookies) == 0:
                         return
-                    driver.get(ReverseLookup.TokenGenerator.url_accounts_noform)
+                    driver.get(CallerLookup.TokenGenerator.url_accounts_noform)
                     for cookie in cookies:
                         try:
                             driver.add_cookie(cookie)
@@ -255,8 +299,8 @@ class ReverseLookup(object):
                             ignore = True
 
                 def save_cookies():
-                    if driver.current_url.count(ReverseLookup.TokenGenerator.url_accounts) == 0:
-                        driver.get(ReverseLookup.TokenGenerator.url_accounts_noform)
+                    if driver.current_url.count(CallerLookup.TokenGenerator.url_accounts) == 0:
+                        driver.get(CallerLookup.TokenGenerator.url_accounts_noform)
                     handler.set_cookies(driver.get_cookies())
 
                 def save_screenshot(name):
@@ -279,7 +323,7 @@ class ReverseLookup(object):
                     delay = 3
                     driver.set_window_size(600, 800)
                     restore_cookies()
-                    url_login = ReverseLookup.OAuthRequest.get_url()
+                    url_login = CallerLookup.OAuthRequest.get_url()
                     log_helper.debug("GoTo URL={}".format(url_login))
                     driver.get(url_login)
                     if driver.current_url.startswith(self.url_accounts):
@@ -292,9 +336,13 @@ class ReverseLookup(object):
                         WebDriverWait(driver, delay).until(ec.element_to_be_clickable((By.ID, "Passwd")))
                         driver.find_element_by_id('Passwd').send_keys(self.password)
                         driver.find_element_by_id("signIn").click()
-                        if driver.current_url.count("challenge") > 0:
-                            save_screenshot("Challenge")
-                            # raise Exception(                                "Account must be logged in manually.  Resulted in user challenge. See screenshot.")
+                        if driver.current_url.count("challenge/totp") > 0:
+                            WebDriverWait(driver, delay).until(ec.element_to_be_clickable((By.ID, "totpPin")))
+                            driver.find_element_by_id('totpPin').send_keys(get_otp())
+                            driver.find_element_by_id("submit").click()
+                        if driver.current_url.count("challenge/az") > 0: #Phone Challenge
+                            if not wait_for(is_token_created, 300):
+                                raise Exception("Time out waiting for phone to accept login.")
                         save_cookies()
                     driver.get(url_login)
                     if wait_for(is_token_created, delay):
@@ -315,9 +363,9 @@ class ReverseLookup(object):
                 token = token[1:-1]
             log_helper.debug("Saving Token to Cache")
             expiry = datetime.datetime.now() + datetime.timedelta(hours=1)
-            ReverseLookup.SettingHelper.set_setting(self.setting_path, "Cache", "TokenExpiry",
+            CallerLookup.SettingHelper.set_setting(self.setting_path, "Cache", "TokenExpiry",
                                                     expiry.strftime("%Y-%m-%d %H:%M:%S"))
-            ReverseLookup.SettingHelper.set_setting(self.setting_path, "Cache", "Token", token)
+            CallerLookup.SettingHelper.set_setting(self.setting_path, "Cache", "Token", token)
             return token
 
     class SettingHelper(object):
@@ -352,7 +400,6 @@ class ReverseLookup(object):
                 if not os.path.exists(self.path):
                     os.makedirs(self.path)
 
-            logging.basicConfig()
             logging.getLogger().setLevel(logging.INFO)
             self._log = logging.getLogger("CallerLookup")
             handler = logging.FileHandler(self.log_path)
@@ -373,19 +420,19 @@ class ReverseLookup(object):
 
         def debug(self, message):
             """Log Debug Message"""
-            self._log.debug(message)
+            self._log.debug(message.encode(sys.stdout.encoding, errors='replace'))
 
         def info(self, message):
             """Log Info Message"""
-            self._log.info(message)
+            self._log.info(message.encode(sys.stdout.encoding, errors='replace'))
 
         def warning(self, message):
             """Log Warning Message"""
-            self._log.warning(message)
+            self._log.warning(message.encode(sys.stdout.encoding, errors='replace'))
 
         def error(self, message):
             """Log Error Message"""
-            self._log.error(message)
+            self._log.error(message.encode(sys.stdout.encoding, errors='replace'))
 
     class HttpHandler(object):
 
@@ -403,7 +450,7 @@ class ReverseLookup(object):
             self._cookiejar = http.cookiejar.MozillaCookieJar()
             if os.path.isfile(self.storage_path):
                 self._cookiejar.load(self.storage_path, ignore_discard=True)
-            self._opener = urllib.request.build_opener(ReverseLookup.HttpHandler.NoRedirect,
+            self._opener = urllib.request.build_opener(CallerLookup.HttpHandler.NoRedirect,
                                                  urllib.request.HTTPCookieProcessor(self._cookiejar))
             return self
 
@@ -416,7 +463,7 @@ class ReverseLookup(object):
             if append_headers is not None:
                 result.update(append_headers)  # result.update(append_headers)
             if include_default:
-                result.update(ReverseLookup.default_headers)
+                result.update(CallerLookup.default_headers)
             return result
 
         def http_get(self, url, headers=None, include_default_headers=True):
@@ -450,8 +497,7 @@ class ReverseLookup(object):
             try:
                 response = self._opener.open(request)
             finally:
-                log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(request.header_items(),
-                                                                            indent=4, sort_keys=True)))
+                log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(request.header_items())))
 
             log_helper.debug("===================")
             log_helper.debug("    {} RESPONSE".format(method))
@@ -463,7 +509,7 @@ class ReverseLookup(object):
             result_dict = collections.defaultdict(list)
             for key, value in response_headers.items():
                 result_dict[key].append(value)
-            log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(result_dict, indent=4, sort_keys=True)))
+            log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(result_dict)))
             if response_headers.get('Content-Encoding') == 'gzip':
                 response_data = gzip.GzipFile(fileobj=response).read().decode("utf-8")
             else:
@@ -512,12 +558,15 @@ class ReverseLookup(object):
                                          item["comment_url"] if "comment_url" in item else None,
                                          None)
 
-
 log_helper = None
 
 if __name__ == "__main__":
 
-    parser = argparse.ArgumentParser(description='Reverse Caller Id')
+    parser = argparse.ArgumentParser(description='Reverse Caller Id',
+                                     formatter_class=argparse.RawDescriptionHelpFormatter,
+                                     epilog="Example: {0} --number +12024561111\n" 
+                                            "         {0} --number 02079309000 --region gb"
+                                     .format(os.path.basename(__file__)))
 
     default_directory = os.path.join(os.path.expanduser("~"), ".CallerLookup")
 
@@ -563,6 +612,11 @@ if __name__ == "__main__":
                         dest="password",
                         required=False)
 
+    parser.add_argument("--otpsecret",
+                        help="Google Account Two-Factor Auth Secret",
+                        dest="otpsecret",
+                        required=False)
+
     parser.add_argument("--logpath",
                         help="Path to Log Directory",
                         dest="log_path",
@@ -577,8 +631,7 @@ if __name__ == "__main__":
     args = vars(parser.parse_args())
 
     try:
-
-        lookup = ReverseLookup(args)
+        lookup = CallerLookup(args)
         result = lookup.search(args["phone_number"], args["default_region"])
 
         print(str(result))
