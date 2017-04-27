@@ -1,3 +1,1 @@
-$ cat .gitignore
-# exclude everything except directory foo/bar
-/.private
+/.private/*
