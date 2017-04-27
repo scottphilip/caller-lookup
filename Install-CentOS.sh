@@ -6,6 +6,19 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 NC='\033[0m'
 
+confirm() {
+    # call with a prompt string or use a default
+    read -r -p "${1:-Are you sure? [y/N]} " response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            true
+            ;;
+        *)
+            false
+            ;;
+    esac
+}
+
 #Check SUDO
 if [ "$EUID" -ne 0 ]
 then
@@ -13,15 +26,7 @@ then
     exit
 fi
 
-read -r -p "Are you sure you want to install CallerLookup and its dependencies? [y/N] " response
-case "$response" in
-    [yY][eE][sS]|[yY])
-        printf "${GREEN}Starting installation...{NC}\n"
-        ;;
-    *)
-        exit
-        ;;
-esac
+(!confirm "Are you sure you want to install CallerLookup and its dependencies? [y/N] ") && exit
 
 printf "${GREEN}Updating Packages...{NC}\n"
 /usr/bin/yum update
