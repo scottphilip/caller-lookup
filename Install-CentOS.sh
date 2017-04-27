@@ -7,7 +7,8 @@ GREEN='\033[0;32m'
 NC='\033[0m'
 
 #Check SUDO
-if [ "$EUID" -ne 0 ]; then
+if [ "$EUID" -ne 0 ]
+then
 	printf "${RED}This must be run as root or with sudo.{NC}\n"
     exit;
 fi
