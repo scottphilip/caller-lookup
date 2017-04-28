@@ -209,14 +209,8 @@ class CallerLookup(object):
 
                 self.username = CallerLookup.SettingHelper \
                     .get_setting(self.setting_path, "Credentials", "username")
-                if self.username is None:
-                    raise Exception("Configuration Error.  Username is not set {}".format(self.setting_path))
-
                 self.password = CallerLookup.SettingHelper \
                     .get_setting(self.setting_path, "Credentials", "password")
-                if self.password is None:
-                    raise Exception("Configuration Error.  Password is not set {}".format(self.setting_path))
-
                 self.otpsecret = CallerLookup.SettingHelper \
                     .get_setting(self.setting_path, "Credentials", "otpsecret")
 
@@ -253,10 +247,9 @@ class CallerLookup(object):
                 request_data = '{"accessToken":"'+oauth_token+'"}'
                 handler.http_get(redirect_location, None)
                 (token_res_code, token_res_data, token_res_header) = handler \
-                    .http_post(CallerLookup.url_token, request_data, {#"content-length":len(str(request_data)),
-                    "content-type": "application/json",
-                                                                       "referer": "https://www.truecaller.com/auth/google/callback",
-                                                                       "origin": "https://www.truecaller.com"})
+                    .http_post(CallerLookup.url_token, request_data, {"content-type": "application/json",
+                                                                      "referer": "https://www.truecaller.com/auth/google/callback",
+                                                                      "origin": "https://www.truecaller.com"})
                 if token_res_code != 200:
                     return None
                 refreshed_token = json.loads(token_res_data)
@@ -330,10 +323,14 @@ class CallerLookup(object):
                         log_helper.debug("Completing Logon Form (current_url={})".format(driver.current_url))
                         email_element = driver.find_element_by_id('Email')
                         if email_element is not None:
+                            if self.username is None or len(self.username) == 0:
+                                raise Exception("Configuration Error.  Username is not set {}".format(self.setting_path))
                             log_helper.debug("Completing Username (current_url={})".format(driver.current_url))
                             email_element.send_keys(self.username)
                             driver.find_element_by_id("next").click()
                         WebDriverWait(driver, delay).until(ec.element_to_be_clickable((By.ID, "Passwd")))
+                        if self.password is None or len(self.password) == 0:
+                            raise Exception("Configuration Error.  Password is required and is not available {}".format(self.setting_path))
                         driver.find_element_by_id('Passwd').send_keys(self.password)
                         driver.find_element_by_id("signIn").click()
                         if driver.current_url.count("challenge/totp") > 0:
@@ -342,7 +339,7 @@ class CallerLookup(object):
                             driver.find_element_by_id("submit").click()
                         if driver.current_url.count("challenge/az") > 0: #Phone Challenge
                             if not wait_for(is_token_created, 300):
-                                raise Exception("Time out waiting for phone to accept login.")
+                                raise Exception("Time out waiting for Remote Two Factor Authentication to accept login.")
                         save_cookies()
                     driver.get(url_login)
                     if wait_for(is_token_created, delay):
@@ -484,8 +481,6 @@ class CallerLookup(object):
             encoded_data = None
             if not data is None:
                 encoded_data = bytes(data, "utf-8")
-                #encoded_data = gzip.compress(data)
-                #encoded_data = str(data).encode('utf-8')
                 add_headers.update({"content-length": len(encoded_data)})
 
             request = urllib.request.Request(url, data=encoded_data, headers=add_headers, method=method)
@@ -517,8 +512,6 @@ class CallerLookup(object):
             log_helper.debug("{:20s} {}".format("DATA", response_data))
 
             return response_code, response_data, response_headers
-
-
 
         def get_cookies(self, full_url):
             url = urllib.parse.urlparse(full_url)
@@ -568,15 +561,16 @@ if __name__ == "__main__":
                                             "         {0} --number 02079309000 --region gb"
                                      .format(os.path.basename(__file__)))
 
-    default_directory = os.path.join(os.path.expanduser("~"), ".CallerLookup")
+    default_directory = "/var/lib/CallerLookup"
 
-    parser.add_argument("--number",
-                        dest="phone_number",
+    parser.add_argument("--number", "--n",
+                        nargs="+",
+                        dest="phone_numbers",
                         help="Phone number accepted in any standard format. When not in international format, the \
                                   default region parameter must be supplied",
-                        required=True)
+                        action='append', required=True)
 
-    parser.add_argument("--region",
+    parser.add_argument("--region", "--r",
                         dest="default_region",
                         default="gb",
                         help="The region that the caller id has originated from.  Only required when phone number" \
@@ -584,43 +578,45 @@ if __name__ == "__main__":
                              "CountryCodes.json",
                         required=False)
 
-    parser.add_argument("--settings",
+    parser.add_argument("--path", "--p",
+                        help="Working Directory",
+                        dest="application_path",
+                        default=default_directory,
+                        required=False)
+
+    parser.add_argument("--settings", "--s",
                         help="Path to Settings INI file",
                         dest="setting_path",
-                        default=os.path.join(default_directory, "CallerLookup.ini"),
                         required=False)
 
-    parser.add_argument("--cookies",
+    parser.add_argument("--cookies", "--c",
                         help="Path to Cookie store file",
                         dest="cookies_path",
-                        default=os.path.join(default_directory, "CallerLookup.cookies"),
                         required=False)
 
-    parser.add_argument("--countrycodes",
+    parser.add_argument("--countrycodes", "--cc",
                         help="Path to Country Codes data file",
                         dest="country_data_path",
-                        default=os.path.join(default_directory, "CountryCodes.json"),
                         required=False)
 
-    parser.add_argument("--username",
+    parser.add_argument("--logpath", "--l",
+                        help="Path to Log Directory",
+                        dest="log_path",
+                        required=False)
+
+    parser.add_argument("--username", "--un",
                         help="Google Account Username",
                         dest="username",
                         required=False)
 
-    parser.add_argument("--password",
+    parser.add_argument("--password", "--pw",
                         help="Google Account Password",
                         dest="password",
                         required=False)
 
-    parser.add_argument("--otpsecret",
+    parser.add_argument("--otpsecret", "--otp",
                         help="Google Account Two-Factor Auth Secret",
                         dest="otpsecret",
-                        required=False)
-
-    parser.add_argument("--logpath",
-                        help="Path to Log Directory",
-                        dest="log_path",
-                        default=os.path.join(default_directory, "CallerLookup.log"),
                         required=False)
 
     parser.add_argument("--debug",
@@ -630,14 +626,23 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    try:
-        lookup = CallerLookup(args)
-        result = lookup.search(args["phone_number"], args["default_region"])
+    args["setting_path"] = os.path.join(default_directory, "CallerLookup.py") if args["setting_path"] is None else args["setting_path"]
+    args["cookies_path"] = os.path.join(default_directory, "CallerLookup.cookies") if args["cookies_path"] is None else args["cookies_path"]
+    args["country_data_path"] = os.path.join(default_directory, "CountryCodes.json") if args["country_data_path"] is None else args["country_data_path"]
+    args["log_path"] = os.path.join(default_directory, "CallerLookup.log") if args["log_path"] is None else args["log_path"]
 
-        print(str(result))
+    try:
+
+        lookup = CallerLookup(args)
+        results = []
+        for phone_number in args["phone_numbers"]:
+            n = " ".join(phone_number)
+            result = json.dumps(lookup.search(n, args["default_region"]))
+            results.append(result)
+        print("[{}]".format(",".join(results)))
         exit(0)
 
     except Exception as e:
 
-        print(str({"Result": "Error", "Error": str(e)}))
+        print(str([{"Result": "Error", "Error": str(e)}]))
         raise
