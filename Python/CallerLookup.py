@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/python
 
 # usage:    CallerLookup.py [-h] --number PHONE_NUMBERS [PHONE_NUMBERS ...]
 #                       [--region DEFAULT_REGION] [--path APPLICATION_PATH]
@@ -49,7 +49,8 @@
 #               This is free software, and you are welcome to redistribute it
 #               under certain conditions
 #               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
-
+import urllib2
+import StringIO
 import argparse
 import configparser
 import datetime
@@ -60,10 +61,9 @@ import logging
 import os
 import time
 import urllib
-
+import urlparse
 import phonenumbers
 import requests.cookies
-import sys
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as ec
@@ -74,10 +74,10 @@ class CallerLookup(object):
     user_agent = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/33.0.1750.152 Chrome/33.0.1750.152 Safari/537.36"
     default_headers = {"Accept": "application/json, text/plain, */*",
                        "Accept-Language": "en-US",
-                       "Accept-Encoding": "gzip, deflate",
+                       "Accept-Encoding": "gzip",
                        "Connection": "Keep-Alive",
                        "User-Agent": user_agent}
-    url_search = 'https://www.truecaller.com/api/search?{}'
+    url_search = 'https://www.truecaller.com/api/search?{0}'
     url_token = "https://www.truecaller.com/api/auth/google?clientId=4"
     url_token_callback = "https://www.truecaller.com/auth/google/callback"
 
@@ -89,7 +89,7 @@ class CallerLookup(object):
         settings["application_path"] = "/var/lib/CallerLookup" \
             if "application_path" not in settings or settings["application_path"] is None else settings["application_path"]
 
-        settings["setting_path"] = os.path.join(settings["application_path"], "CallerLookup.py") \
+        settings["setting_path"] = os.path.join(settings["application_path"], "CallerLookup.ini") \
             if "setting_path" not in settings or settings["setting_path"] is None else settings["setting_path"]
 
         settings["cookies_path"] = os.path.join(settings["application_path"], "CallerLookup.cookies") \
@@ -101,12 +101,16 @@ class CallerLookup(object):
         settings["log_path"] = os.path.join(settings["application_path"], "CallerLookup.log") \
             if "log_path" not in settings or settings["log_path"] is None else settings["log_path"]
 
+        if not settings["is_debug"] or True:  #TODO
+            import warnings
+            warnings.filterwarnings("ignore")
+
         global log_helper
         if log_helper is None:
             log_helper = self.LogHelper(settings)
 
         log_helper.debug("#############################################################################")
-        log_helper.debug("{:20} {}".format("ARGS", str(settings)))
+        log_helper.debug("{0:20} {1}".format("ARGS", str(settings)))
 
         self._generator = CallerLookup.TokenGenerator(settings)
         self.settings = settings
@@ -139,7 +143,7 @@ class CallerLookup(object):
                     if country["CC"] == country_dial_code:
                         return country["CCN"]
             except Exception as e:
-                log_helper.error("{:20} Error Loading Country Code Data: {}".format("COUNTRY DATA", str(e)))
+                log_helper.error("{0:20} Error Loading Country Code Data: {1}".format("COUNTRY DATA", str(e)))
             return provided_region
 
         def get_response_invalid(number, region):
@@ -154,19 +158,19 @@ class CallerLookup(object):
         (is_valid_number, phone_number, default_region) = format_phone_number(phone_number,
                                                                               default_region)
         if not is_valid_number:
-            log_helper.info("{:20s} {:30s} {} ({})".format("SEARCH",
+            log_helper.info("{0:20s} {1:30s} {2} ({3})".format("SEARCH",
                                                            "Invalid Number",
                                                            phone_number,
                                                            default_region))
             return get_response_invalid(phone_number, default_region)
 
-        log_helper.info("{:20s} {:30s} {} ({})".format("SEARCH",
+        log_helper.info("{0:20s} {1:30s} {2} ({3})".format("SEARCH",
                                                        "PARAMETERS",
                                                        phone_number,
                                                        default_region))
         try:
             fail_count = 0
-            query = self.url_search.format(urllib.parse.urlencode({"type": 4,
+            query = self.url_search.format(urllib.urlencode({"type": 4,
                                                                    "countryCode": default_region,
                                                                    "q": phone_number}))
             with CallerLookup.HttpHandler(self.settings["cookies_path"], CallerLookup.user_agent) as handler:
@@ -177,19 +181,19 @@ class CallerLookup(object):
                         fail_count += 1
                         continue
                     (token_res_code, token_res_data, token_res_header) = handler.http_get(query, [
-                        ("Authorization", "Bearer {}".format(token)),
+                        ("Authorization", "Bearer {0}".format(token)),
                         ("Host", "www.truecaller.com"),
                         ("Referer", "https://www.truecaller.com/")])
                     if token_res_code == 200:
                         return self._format_data(token_res_data, phone_number, default_region)
                     elif token_res_code == 401:
-                        log_helper.info("Token {} has expired.".format(token))
+                        log_helper.info("Token {0} has expired.".format(token))
                     else:
                         log_helper.info(
-                            "Token {} resulted in status code: {} ".format(token, token_res_code, token_res_data))
+                            "Token {0} resulted in status code: {1} {2} ".format(token, token_res_code, token_res_data))
                     fail_count += 1
 
-            raise Exception("Failed {} times attempting query {}".format(fail_count, query))
+            raise Exception("Failed {0} times attempting query {1}".format(fail_count, query))
 
         except Exception as e:
             log_helper.error(str(e))
@@ -226,7 +230,7 @@ class CallerLookup(object):
         if "name" in data:
             result["name"] = data["name"]
             result["result"] = "success"
-            log_helper.info("{:20s} {:30s} {}".format("SEARCH",
+            log_helper.info("{0:20s} {1:30s} {2}".format("SEARCH",
                                                       "RESULT",
                                                       str(result)))
             return result
@@ -250,18 +254,18 @@ class CallerLookup(object):
 
         @staticmethod
         def get_url():
-            return "{}://{}{}?{}" \
+            return "{0}://{1}{2}?{3}" \
                 .format(CallerLookup.OAuthRequest.protocol,
                         CallerLookup.OAuthRequest.domain,
                         CallerLookup.OAuthRequest.path,
-                        urllib.parse.urlencode(CallerLookup.OAuthRequest.data))
+                        urllib.urlencode(CallerLookup.OAuthRequest.data))
 
     class TokenGenerator(object):
 
         url_accounts = "https://accounts.google.com"
         url_myaccount = "https://myaccount.google.com"
-        url_accounts_servicelogin = "{}/ServiceLogin".format(url_accounts)
-        url_accounts_noform = "{}/x".format(url_accounts)
+        url_accounts_servicelogin = "{0}/ServiceLogin".format(url_accounts)
+        url_accounts_noform = "{0}/x".format(url_accounts)
 
         def __init__(self, settings):
 
@@ -307,16 +311,16 @@ class CallerLookup(object):
                 if oauth_res_code != 302 or not "location" in oauth_res_header:
                     return None
                 redirect_location = oauth_res_header["location"]
-                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Redirect Url", redirect_location))
+                log_helper.debug("{0:20} {1:30} {2}".format("REFRESH TOKEN", "Redirect Url", redirect_location))
                 if redirect_location.count(self.url_accounts) > 0:
                     return None
                 if redirect_location.count("#") == 0:
                     return None
                 query_string_data = redirect_location.split("#")[1]
-                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Querystring Data", query_string_data))
-                oauth_data = urllib.parse.parse_qs(query_string_data)
+                log_helper.debug("{0:20} {1:30} {2}".format("REFRESH TOKEN", "Querystring Data", query_string_data))
+                oauth_data = urlparse.parse_qs(query_string_data)
                 oauth_token = oauth_data["access_token"][0]
-                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Oauth Token", oauth_token))
+                log_helper.debug("{0:20} {1:30} {2}".format("REFRESH TOKEN", "Oauth Token", oauth_token))
                 request_data = '{"accessToken":"'+oauth_token+'"}'
                 handler.http_get(redirect_location, None)
                 (token_res_code, token_res_data, token_res_header) = handler \
@@ -325,11 +329,11 @@ class CallerLookup(object):
                                                                       "origin": "https://www.truecaller.com"})
                 if token_res_code != 200:
                     return None
-                refreshed_token = json.loads(token_res_data)
+                refreshed_token = json.loads(token_res_data.decode("utf-8"))
                 if not "accessToken" in refreshed_token:
                     return None
                 refreshed_access_token = refreshed_token["accessToken"]
-                log_helper.debug("{:20} {:30} {}".format("REFRESH TOKEN", "Success", refreshed_access_token))
+                log_helper.debug("{0:20} {1:30} {2}".format("REFRESH TOKEN", "Success", refreshed_access_token))
                 return refreshed_access_token
 
             def _get_restart_token():
@@ -373,9 +377,9 @@ class CallerLookup(object):
                     save_path = os.path.join(log_helper.path, "ScreenShots")
                     if not os.path.exists(save_path):
                         os.makedirs(save_path)
-                    save_path = os.path.join(save_path, "{}-{}.png".format(
+                    save_path = os.path.join(save_path, "{0}-{1}.png".format(
                         str(datetime.datetime.now().strftime("%Y%m%d-%H%M%S")), name))
-                    log_helper.debug("Screenshot URL={} Image=>{}"
+                    log_helper.debug("Screenshot URL={0} Image=>{1}"
                                      .format(driver.current_url, save_path))
                     driver.save_screenshot(save_path)
 
@@ -390,20 +394,20 @@ class CallerLookup(object):
                     driver.set_window_size(600, 800)
                     restore_cookies()
                     url_login = CallerLookup.OAuthRequest.get_url()
-                    log_helper.debug("GoTo URL={}".format(url_login))
+                    log_helper.debug("GoTo URL={0}".format(url_login))
                     driver.get(url_login)
                     if driver.current_url.startswith(self.url_accounts):
-                        log_helper.debug("Completing Logon Form (current_url={})".format(driver.current_url))
+                        log_helper.debug("Completing Logon Form (current_url={0})".format(driver.current_url))
                         email_element = driver.find_element_by_id('Email')
                         if email_element is not None:
                             if self.username is None or len(self.username) == 0:
-                                raise Exception("Configuration Error.  Username is not set {}".format(self.setting_path))
-                            log_helper.debug("Completing Username (current_url={})".format(driver.current_url))
+                                raise Exception("Configuration Error.  Username is not set {0}".format(self.setting_path))
+                            log_helper.debug("Completing Username (current_url={0})".format(driver.current_url))
                             email_element.send_keys(self.username)
                             driver.find_element_by_id("next").click()
                         WebDriverWait(driver, delay).until(ec.element_to_be_clickable((By.ID, "Passwd")))
                         if self.password is None or len(self.password) == 0:
-                            raise Exception("Configuration Error.  Password is required and is not available {}".format(self.setting_path))
+                            raise Exception("Configuration Error.  Password is required and is not available {0}".format(self.setting_path))
                         driver.find_element_by_id('Passwd').send_keys(self.password)
                         driver.find_element_by_id("signIn").click()
                         if driver.current_url.count("challenge/totp") > 0:
@@ -490,23 +494,23 @@ class CallerLookup(object):
 
         def debug(self, message):
             """Log Debug Message"""
-            self._log.debug(message.encode(sys.stdout.encoding, errors='replace'))
+            self._log.debug(message) #.encode(sys.stdout.encoding, errors='replace')
 
         def info(self, message):
             """Log Info Message"""
-            self._log.info(message.encode(sys.stdout.encoding, errors='replace'))
+            self._log.info(message)
 
         def warning(self, message):
             """Log Warning Message"""
-            self._log.warning(message.encode(sys.stdout.encoding, errors='replace'))
+            self._log.warning(message)
 
         def error(self, message):
             """Log Error Message"""
-            self._log.error(message.encode(sys.stdout.encoding, errors='replace'))
+            self._log.error(message)
 
     class HttpHandler(object):
 
-        class NoRedirect(urllib.request.HTTPErrorProcessor):
+        class NoRedirect(urllib2.HTTPErrorProcessor):
             def http_response(self, request, response):
                 return response
 
@@ -520,8 +524,8 @@ class CallerLookup(object):
             self._cookiejar = http.cookiejar.MozillaCookieJar()
             if os.path.isfile(self.storage_path):
                 self._cookiejar.load(self.storage_path, ignore_discard=True)
-            self._opener = urllib.request.build_opener(CallerLookup.HttpHandler.NoRedirect,
-                                                 urllib.request.HTTPCookieProcessor(self._cookiejar))
+            self._opener = urllib2.build_opener(CallerLookup.HttpHandler.NoRedirect,
+                                                 urllib2.HTTPCookieProcessor(self._cookiejar))
             return self
 
         def __exit__(self, exc_type, exc_val, exc_tb):
@@ -546,48 +550,60 @@ class CallerLookup(object):
 
 
             log_helper.debug("===================")
-            log_helper.debug("    {} REQUEST".format(method))
+            log_helper.debug("    {0} REQUEST".format(method))
             log_helper.debug("===================")
-            log_helper.debug("{:20s} {}".format("URL", url))
+            log_helper.debug("{0:20s} {1}".format("URL", url))
 
             add_headers = self.get_headers(headers, include_default_headers)
             encoded_data = None
             if not data is None:
-                encoded_data = bytes(data, "utf-8")
+                encoded_data = bytes(data)
                 add_headers.update({"content-length": len(encoded_data)})
 
-            request = urllib.request.Request(url, data=encoded_data, headers=add_headers, method=method)
+            request = urllib2.Request(url, data=encoded_data, headers=add_headers)
+
 
             if not data is None:
-                log_helper.debug("{:20s} \n{}".format("DATA", data))
-                log_helper.debug("{:20s} \n{}".format("DATA (Encoded)", encoded_data))
+                log_helper.debug("{0:20s} \n{1}".format("DATA", data))
+                log_helper.debug("{0:20s} \n{1}".format("DATA (Encoded)", encoded_data))
 
             try:
-                response = self._opener.open(request)
+                #response = self._opener.open(request)
+                response = urllib2.urlopen(request)
             finally:
-                log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(request.header_items())))
+                log_helper.debug("{0:20s} \n{1}".format("HEADERS", json.dumps(request.header_items())))
 
             log_helper.debug("===================")
-            log_helper.debug("    {} RESPONSE".format(method))
+            log_helper.debug("    {0} RESPONSE".format(method))
             log_helper.debug("===================")
             response_code = response.getcode()
-            log_helper.debug("{:20s} {}".format("STATUS CODE", response_code))
+            log_helper.debug("{0:20s} {1}".format("STATUS CODE", response_code))
             response_headers = response.info()
             import collections
             result_dict = collections.defaultdict(list)
             for key, value in response_headers.items():
                 result_dict[key].append(value)
-            log_helper.debug("{:20s} \n{}".format("HEADERS", json.dumps(result_dict)))
+            log_helper.debug("{0:20s} \n{1}".format("HEADERS", json.dumps(result_dict)))
+
             if response_headers.get('Content-Encoding') == 'gzip':
-                response_data = gzip.GzipFile(fileobj=response).read().decode("utf-8")
+                #zipper = gzip.GzipFile(fileobj=response)
+                #response_data = zlib.decompress(response_data)
+                #response_data = zipper.read()
+                #response_data = response_data.decode("utf-8")
+                #json_data = json.load(response)
+                #response_data = json.dumps(json_data)
+                buf = StringIO.StringIO(response.read())
+                f = gzip.GzipFile(fileobj=buf)
+                response_data = f.read()
             else:
-                response_data = response.read()
-            log_helper.debug("{:20s} {}".format("DATA", response_data))
+                response_data = response.read().decode("utf-8")
+
+            log_helper.debug("{0:20s} {1}".format("DATA", response_data))
 
             return response_code, response_data, response_headers
 
         def get_cookies(self, full_url):
-            url = urllib.parse.urlparse(full_url)
+            url = urlparse.urlparse(full_url)
             domain = url.netloc
             request_jar = requests.cookies.RequestsCookieJar()
             request_jar.update(self._cookiejar)

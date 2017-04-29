@@ -23,14 +23,13 @@
 GITHUB_MASTER_URL='https://raw.githubusercontent.com/scottphilip/caller-lookup/master'
 SUPERFECTA_SOURCES_PATH='/var/www/html/admin/modules/superfecta/sources'
 ASTERISK_AGIBIN_PATH='/var/lib/asterisk/agi-bin'
-PYTHON_VERSION='3.6.1'
-PYTHON_DOWNLOAD_URL="http://python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
+
 
 
 #-----------------------------------------------------------------------------------------------
 #  ARGS
 #-----------------------------------------------------------------------------------------------
-SILENT=0
+IS_SILENT_INSTALL=0
 
 function invalid_flag()
 {
@@ -39,7 +38,7 @@ function invalid_flag()
 
 while [ "$1" != "" ]; do
     case $1 in
-        -s | --silent )         SILENT=1
+        -s | --silent )         IS_SILENT_INSTALL=1
                                 ;;
         * )                     invalid_flag
                                 exit 1
@@ -58,7 +57,7 @@ then
 	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
     exit
 fi
-if [ "$SILENT" == 0 ]
+if [ "$IS_SILENT_INSTALL" == 0 ]
 then
     printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
     read -r response
@@ -94,62 +93,32 @@ wget -O "${SUPERFECTA_SOURCES_PATH}/source-CallerLookup.module" "${GITHUB_MASTER
 #-----------------------------------------------------------------------------------------------
 #  CREATE SETTINGS INI FILE
 #-----------------------------------------------------------------------------------------------
-if [ "$SILENT" == 0 ]
+if [ "$IS_SILENT_INSTALL" == 0 ]
 then
     printf "\033[0;33mDo you want to save your Google Account Credentials in the config file? [y/N] \033[0m\n"
     read -r response
+    case "$response" in
+        [yY][eE][sS]|[yY])
+            printf "\033[0;33mPlease enter your Google Account Username (Email): \033[0m\n"
+            read -r username
+            printf "\033[0;33mPlease enter your Google Account Password: \033[0m\n"
+            read -r -s password
+            printf "\033[0;33mIf 2-Step Verification is enabled, please enter TOTP secret: \033[0m\n"
+            read -r otpsecret
+            echo "[Credentials]" > "/var/lib/CallerLookup/CallerLookup.ini"
+            echo "username = $username" >> "/var/lib/CallerLookup/CallerLookup.ini"
+            echo "password = $password" >> "/var/lib/CallerLookup/CallerLookup.ini"
+            echo "otpsecret = $otpsecret" >> "/var/lib/CallerLookup/CallerLookup.ini"
+            printf "\033[0;32mCredentials Saved.\033[0m\n"
+            ;;
+    esac
 fi
-case "$response" in
-    [yY][eE][sS]|[yY])
-        printf "\033[0;33mPlease enter your Google Account Username (Email): \033[0m\n"
-        read -r username
-        printf "\033[0;33mPlease enter your Google Account Password: \033[0m\n"
-        read -r -s password
-        printf "\033[0;33mIf 2-Step Verification is enabled, please enter TOTP secret: \033[0m\n"
-        read -r otpsecret
-        echo "[Credentials]" > "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "username = $username" >> "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "password = $password" >> "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "otpsecret = $otpsecret" >> "/var/lib/CallerLookup/CallerLookup.ini"
-        printf "\033[0;32mCredentials Saved.\033[0m\n"
-        ;;
-    *)
-        ;;
-esac
 
 
 #-----------------------------------------------------------------------------------------------
-#  INSTALL PYTHON3
+#  INSTALL PYTHON2.7
 #-----------------------------------------------------------------------------------------------
-if [ "$SILENT" == 0 ]
-then
-    printf "\033[0;33mDo you want to automatically download and install Python3? [y/N] \033[0m\n"
-    read -r response
-fi
-case "$response" in
-    [yY][eE][sS]|[yY])
-
-        cd ~
-        yum update -y
-        yum -y install zlib-devel
-
-        printf "\033[0;32mDownloading Python3 ...\033[0m\n"
-        wget "${PYTHON_DOWNLOAD_URL}"
-        tar xf "Python-${PYTHON_VERSION}.tar.xz"
-        cd "Python-${PYTHON_VERSION}"
-        printf "\033[0;Installing Python3 ...\033[0m\n"
-        eval Python-${PYTHON_VERSION}/configure --enable-optimizations
-        make && make altinstall
-        cd ~
-
-        printf "\033[0;32mPython PIP...\033[0m\n"
-        wget get-pip.py https://bootstrap.pypa.io/get-pip.py
-        chmod +x get-pip.py
-        python3.6 get-pip.py
-        ;;
-    *)
-        ;;
-esac
+#TODO
 
 
 #-----------------------------------------------------------------------------------------------
@@ -157,16 +126,17 @@ esac
 #-----------------------------------------------------------------------------------------------
 install_pip_package() {
     printf "\033[0;32mInstalling $1...\033[0m\n"
-    eval /usr/local/bin/pip3.6 install --index-url=http://pypi.python.org/simple/ --trusted-host pypi.python.org $1
+    eval pip install $1
 }
 
-if [ "$SILENT" == 0 ]
+if [ "$IS_SILENT_INSTALL" == 0 ]
 then
-    printf "\033[0;33mDo you want to install Python3 packages from PIP3? [y/N] \033[0m\n"
+    printf "\033[0;33mDo you want to install Python2.7 packages from PIP? [y/N] \033[0m\n"
     read -r response
 fi
 case "$response" in
     [yY][eE][sS]|[yY])
+        source CallerLookupEnvironment/bin/activate
         install_pip_package selenium
         install_pip_package phonenumbers
         install_pip_package pyotp
@@ -176,6 +146,7 @@ case "$response" in
         install_pip_package cookiejar
         install_pip_package parse
         install_pip_package requests
+        deactivate
         exit
         ;;
     *)
