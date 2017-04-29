@@ -18,7 +18,9 @@ Requires a Google Account to authenticate against.  Supports Two step authentica
 ### CentOS (FreePBX)
 
 ```
-sudo wget -qO- https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install-CentOS.sh | bash
+wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install-CentOS.sh
+chmod +x Install-CentOS.sh
+sudo ./Install-CentOS.sh
 ```
 
 ## Author
