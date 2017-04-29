@@ -31,17 +31,25 @@ class CallerLookup(object):
     url_token = "https://www.truecaller.com/api/auth/google?clientId=4"
     url_token_callback = "https://www.truecaller.com/auth/google/callback"
 
-    def __init__(self, settings):
+    def __init__(self, settings={}):
 
-        settings["is_debug"] = False if settings["is_debug"] is None else settings["is_debug"]
+        settings["is_debug"] = False if "is_debug" not in settings or settings["is_debug"] is None \
+            else settings["is_debug"]
+
+        settings["application_path"] = "/var/lib/CallerLookup" \
+            if "application_path" not in settings or settings["application_path"] is None else settings["application_path"]
+
         settings["setting_path"] = os.path.join(settings["application_path"], "CallerLookup.py") \
-            if settings["setting_path"] is None else settings["setting_path"]
+            if "setting_path" not in settings or settings["setting_path"] is None else settings["setting_path"]
+
         settings["cookies_path"] = os.path.join(settings["application_path"], "CallerLookup.cookies") \
-            if settings["cookies_path"] is None else settings["cookies_path"]
+            if "cookies_path" not in settings or settings["cookies_path"] is None else settings["cookies_path"]
+
         settings["country_data_path"] = os.path.join(settings["application_path"], "CountryCodes.json") \
-            if settings["country_data_path"] is None else settings["country_data_path"]
+            if "country_data_path" not in settings or settings["country_data_path"] is None else settings["country_data_path"]
+
         settings["log_path"] = os.path.join(settings["application_path"], "CallerLookup.log") \
-            if settings["log_path"] is None else settings["log_path"]
+            if "log_path" not in settings or settings["log_path"] is None else settings["log_path"]
 
         global log_helper
         if log_helper is None:
@@ -571,8 +579,6 @@ if __name__ == "__main__":
                                             "         {0} --number 02079309000 --region gb"
                                      .format(os.path.basename(__file__)))
 
-    default_directory = "/var/lib/CallerLookup"
-
     parser.add_argument("--number", "--n",
                         nargs="+",
                         dest="phone_numbers",
@@ -591,7 +597,6 @@ if __name__ == "__main__":
     parser.add_argument("--path", "--p",
                         help="Working Directory",
                         dest="application_path",
-                        default=default_directory,
                         required=False)
 
     parser.add_argument("--settings", "--s",
@@ -636,16 +641,20 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-
     try:
 
         lookup = CallerLookup(args)
+
         results = []
+
         for phone_number in args["phone_numbers"]:
+
             n = " ".join(phone_number)
             result = lookup.search(n, args["default_region"])
             results.append(result)
+
         print(json.dumps(results))
+
         exit(0)
 
     except Exception as e:

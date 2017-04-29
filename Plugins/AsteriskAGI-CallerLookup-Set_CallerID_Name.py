@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 import sys
 
-
 if __name__ == '__main__':
 
     import importlib.util
@@ -14,7 +13,7 @@ if __name__ == '__main__':
 
     try:
 
-        agi = asterisk.AGI()
+        agi = asterisk.agi()
 
         caller_id = agi.env["agi_callerid"] if "agi_callerid" in agi.env else None
         if caller_id is None:
@@ -22,11 +21,7 @@ if __name__ == '__main__':
 
         default_region = agi.env["agi_arg_1"] if "agi_arg_1" in agi.env else None
 
-        settings = {
-            "settings_path": "/var/lib/CallerLookup/CallerLookup.ini"
-        }
-
-        caller_lookup = CallerLookup(settings)
+        caller_lookup = CallerLookup()
         result = caller_lookup.search(caller_id, default_region)
 
         agi.verbose("Python AGI Started")
