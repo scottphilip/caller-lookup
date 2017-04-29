@@ -1,26 +1,68 @@
 #!/bin/bash
+#
+# Usage:
+#
+#               wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install-CentOS.sh
+#               chmod +x Install-CentOS.sh
+#               sudo ./Install-CentOS.sh
+#
+# Author:       Scott Philip (sp@scottphilip.com)
+# Source:       https://github.com/scottphilip/caller-lookup/
+# Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+#               CallerLookup Copyright (C) 2017 SCOTT PHILIP
+#               This program comes with ABSOLUTELY NO WARRANTY
+#               This is free software, and you are welcome to redistribute it
+#               under certain conditions
+#               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
 
-################################################################################################
-## CONSTANTS ###################################################################################
-################################################################################################
+
+
+#-----------------------------------------------------------------------------------------------
+#  CONSTANTS
+#-----------------------------------------------------------------------------------------------
 GITHUB_MASTER_URL='https://raw.githubusercontent.com/scottphilip/caller-lookup/master'
 SUPERFECTA_SOURCES_PATH='/var/www/html/admin/modules/superfecta/sources'
 ASTERISK_AGIBIN_PATH='/var/lib/asterisk/agi-bin'
-PYTHON_VERSION='3.6.0'
+PYTHON_VERSION='3.6.1'
 PYTHON_DOWNLOAD_URL="http://python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
 
 
-################################################################################################
-## INIT
-################################################################################################
+#-----------------------------------------------------------------------------------------------
+#  ARGS
+#-----------------------------------------------------------------------------------------------
+SILENT=0
+
+function invalid_flag()
+{
+    echo "Unknown flag provided."
+}
+
+while [ "$1" != "" ]; do
+    case $1 in
+        -s | --silent )         SILENT=1
+                                ;;
+        * )                     invalid_flag
+                                exit 1
+    esac
+    shift
+done
+
+response="y"
+
+#-----------------------------------------------------------------------------------------------
+#  SETUP
+#-----------------------------------------------------------------------------------------------
 cd ~
 if [ "$EUID" -ne 0 ]
 then
 	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
     exit
 fi
-printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
-read -r response
+if [ "$SILENT" == 0 ]
+then
+    printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
+    read -r response
+fi
 case "$response" in
     [yY][eE][sS]|[yY])
         ;;
@@ -32,9 +74,9 @@ mkdir /var/lib/CallerLookup
 cd ~
 
 
-################################################################################################
-## DOWNLOAD SCRIPT FILES
-################################################################################################
+#-----------------------------------------------------------------------------------------------
+#  DOWNLOAD SCRIPT FILES
+#-----------------------------------------------------------------------------------------------
 printf "\033[0;32mSaving CallerLookup.py...\032[0m\n"
 wget -O /var/lib/CallerLookup/CallerLookup.py "${GITHUB_MASTER_URL}/Python/CallerLookup.py"
 chmod +x /var/lib/CallerLookup/CallerLookup.py
@@ -49,11 +91,14 @@ printf "\033[0;32mSaving Superfecta Module...\033[0m\n"
 wget -O "${SUPERFECTA_SOURCES_PATH}/source-CallerLookup.module" "${GITHUB_MASTER_URL}/Plugins/source-CallerLookup.module.php"
 
 
-################################################################################################
-## CREATE SETTINGS INI FILE ####################################################################
-################################################################################################
-printf "\033[0;33mDo you want to save your Google Acount Credentials in the config file? [y/N] \033[0m\n"
-read -r response
+#-----------------------------------------------------------------------------------------------
+#  CREATE SETTINGS INI FILE
+#-----------------------------------------------------------------------------------------------
+if [ "$SILENT" == 0 ]
+then
+    printf "\033[0;33mDo you want to save your Google Account Credentials in the config file? [y/N] \033[0m\n"
+    read -r response
+fi
 case "$response" in
     [yY][eE][sS]|[yY])
         printf "\033[0;33mPlease enter your Google Account Username (Email): \033[0m\n"
@@ -72,40 +117,54 @@ case "$response" in
         ;;
 esac
 
-################################################################################################
-## INSTALL DEPENDENCIES FROM YUM
-################################################################################################
-printf "\033[0;33mDo you want to automatically download and install dependencies? [y/N] \033[0m\n"
-read -r response
+
+#-----------------------------------------------------------------------------------------------
+#  INSTALL PYTHON3
+#-----------------------------------------------------------------------------------------------
+if [ "$SILENT" == 0 ]
+then
+    printf "\033[0;33mDo you want to automatically download and install Python3? [y/N] \033[0m\n"
+    read -r response
+fi
 case "$response" in
     [yY][eE][sS]|[yY])
+
         cd ~
         yum update -y
-        command -v python >/dev/null 2>&1 || {
-            printf "\033[0;32mPython...\033[0m\n"
-            wget "${PYTHON_DOWNLOAD_URL}"
-            tar xf "Python-${PYTHON_VERSION}.tar.xz"
-            cd "Python-${PYTHON_VERSION}"
-            eval Python-${PYTHON_VERSION}/configure --enable-optimizations
-            make && make altinstall
-        }
+        yum -y install zlib-devel
+
+        printf "\033[0;32mDownloading Python3 ...\033[0m\n"
+        wget "${PYTHON_DOWNLOAD_URL}"
+        tar xf "Python-${PYTHON_VERSION}.tar.xz"
+        cd "Python-${PYTHON_VERSION}"
+        printf "\033[0;Installing Python3 ...\033[0m\n"
+        eval Python-${PYTHON_VERSION}/configure --enable-optimizations
+        make && make altinstall
         cd ~
-        #printf "\033[0;32mPython PIP...\033[0m\n"
-        #wget get-pip.py https://bootstrap.pypa.io/get-pip.py
-        #chmod +x get-pip.py
-        #./get-pip.py
+
+        printf "\033[0;32mPython PIP...\033[0m\n"
+        wget get-pip.py https://bootstrap.pypa.io/get-pip.py
+        chmod +x get-pip.py
+        python3.6 get-pip.py
         ;;
     *)
         ;;
 esac
 
+
+#-----------------------------------------------------------------------------------------------
+#  INSTALL PIP PACKAGES
+#-----------------------------------------------------------------------------------------------
 install_pip_package() {
     printf "\033[0;32mInstalling $1...\033[0m\n"
-    eval /usr/bin/pip3 install $1
+    eval /usr/local/bin/pip3.6 install --index-url=http://pypi.python.org/simple/ --trusted-host pypi.python.org $1
 }
 
-printf "\033[0;33mDo you want to install Python3 packages from PIP3? [y/N] \033[0m\n"
-read -r response
+if [ "$SILENT" == 0 ]
+then
+    printf "\033[0;33mDo you want to install Python3 packages from PIP3? [y/N] \033[0m\n"
+    read -r response
+fi
 case "$response" in
     [yY][eE][sS]|[yY])
         install_pip_package selenium
@@ -124,9 +183,9 @@ case "$response" in
         ;;
 esac
 
-################################################################################################
-## FINISHED
-################################################################################################
+
+#-----------------------------------------------------------------------------------------------
+#  FINISHED
+#-----------------------------------------------------------------------------------------------
 printf "\033[0;32mInstallation Complete.\033[0m\n"
-exit
-################################################################################################
+exit 0

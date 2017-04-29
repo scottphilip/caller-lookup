@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # usage:    CallerLookup.py [-h] --number PHONE_NUMBERS [PHONE_NUMBERS ...]
 #                       [--region DEFAULT_REGION] [--path APPLICATION_PATH]
@@ -151,13 +151,6 @@ class CallerLookup(object):
             return {"result": "error",
                     "message": message}
 
-        def get_response_success(number, region, name, score):
-            return {"result": "success",
-                    "number": number,
-                    "region": region,
-                    "name": name,
-                    "score": score}
-
         (is_valid_number, phone_number, default_region) = format_phone_number(phone_number,
                                                                               default_region)
         if not is_valid_number:
@@ -218,6 +211,18 @@ class CallerLookup(object):
             if len(addresses) > 0:
                 if "countryCode" in addresses[0]:
                     result["region"] = addresses[0]["countryCode"].upper()
+                if "address" in addresses[0]:
+                    result["address"] = addresses[0]["address"]
+        if "phones" in data:
+            phones = data["phones"]
+            if len(phones) > 0:
+                if "e164Format" in phones[0]:
+                    result["number_e164"] = phones[0]["e164Format"]
+                if "nationalFormat" in phones[0]:
+                    result["number_national"] = phones[0]["nationalFormat"]
+                if "dialingCode" in phones[0]:
+                    result["region_dial_code"] = phones[0]["dialingCode"]
+
         if "name" in data:
             result["name"] = data["name"]
             result["result"] = "success"
