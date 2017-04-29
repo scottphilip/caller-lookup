@@ -50,7 +50,20 @@ case "$response" in
         echo "otpsecret = $otpsecret\n" >> "/var/lib/CallerLookup/CallerLookup.ini"
 
         ;;
+    *)
+        echo "Installing..."
+        ;;
 esac
+
+checkinstall() {
+    APP_VERSION="$(python -V)"
+    if [[ "$APP_VERSION" ~= "3.6" ]]
+    then
+        true
+    else
+        false
+    fi
+}
 
 printf "${GREEN}Adding Source...${NC}\n"
 /usr/bin/yum -y install https://centos7.iuscommunity.org/ius-release.rpm
@@ -58,12 +71,18 @@ printf "${GREEN}Adding Source...${NC}\n"
 printf "${GREEN}Updating Packages...${NC}\n"
 /usr/bin/yum update
 
-printf "${GREEN}Python...${NC}\n"
-wget http://python.org/ftp/python/3.6.0/Python-3.6.0.tar.xz
-tar xf Python-3.6.0.tar.xz
-cd Python-3.6.0
-./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
-make && make altinstall
+printf "${GREEN}ZLib...${NC}\n"
+/usr/bin/yum install zlib
+
+command -v python >/dev/null 2>&1 || {
+    printf "${GREEN}Python...${NC}\n"
+    wget http://python.org/ftp/python/3.6.0/Python-3.6.0.tar.xz
+    tar xf Python-3.6.0.tar.xz
+    cd Python-3.6.0
+    ./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
+    make && make install
+}
+
 
 printf "${GREEN}Python PIP...${NC}\n"
 wget https://bootstrap.pypa.io/get-pip.py
@@ -77,6 +96,9 @@ printf "${GREEN}PhoneNumbers...${NC}\n"
 
 printf "${GREEN}Pyotp...${NC}\n"
 /usr/local/bin/pip install pyotp
+
+printf "${GREEN}Python AGI...${NC}\n"
+/usr/local/bin/pip install pyst2
 
 mkdir /var/lib/CallerLookup
 

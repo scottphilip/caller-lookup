@@ -8,7 +8,6 @@ import json
 import logging
 import os
 import time
-import urllib
 import urllib.parse
 import urllib.request
 
@@ -33,6 +32,17 @@ class CallerLookup(object):
     url_token_callback = "https://www.truecaller.com/auth/google/callback"
 
     def __init__(self, settings):
+
+        settings["is_debug"] = False if settings["is_debug"] is None else settings["is_debug"]
+        settings["setting_path"] = os.path.join(settings["application_path"], "CallerLookup.py") \
+            if settings["setting_path"] is None else settings["setting_path"]
+        settings["cookies_path"] = os.path.join(settings["application_path"], "CallerLookup.cookies") \
+            if settings["cookies_path"] is None else settings["cookies_path"]
+        settings["country_data_path"] = os.path.join(settings["application_path"], "CountryCodes.json") \
+            if settings["country_data_path"] is None else settings["country_data_path"]
+        settings["log_path"] = os.path.join(settings["application_path"], "CallerLookup.log") \
+            if settings["log_path"] is None else settings["log_path"]
+
         global log_helper
         if log_helper is None:
             log_helper = self.LogHelper(settings)
@@ -573,7 +583,7 @@ if __name__ == "__main__":
     parser.add_argument("--region", "--r",
                         dest="default_region",
                         default="gb",
-                        help="The region that the caller id has originated from.  Only required when phone number" \
+                        help="The home region that the trunk belongs to.  Only required when phone number" \
                              " is supplied without an international dialling code.  Must be in CCN format.  See" \
                              "CountryCodes.json",
                         required=False)
@@ -626,10 +636,6 @@ if __name__ == "__main__":
 
     args = vars(parser.parse_args())
 
-    args["setting_path"] = os.path.join(default_directory, "CallerLookup.py") if args["setting_path"] is None else args["setting_path"]
-    args["cookies_path"] = os.path.join(default_directory, "CallerLookup.cookies") if args["cookies_path"] is None else args["cookies_path"]
-    args["country_data_path"] = os.path.join(default_directory, "CountryCodes.json") if args["country_data_path"] is None else args["country_data_path"]
-    args["log_path"] = os.path.join(default_directory, "CallerLookup.log") if args["log_path"] is None else args["log_path"]
 
     try:
 
@@ -637,9 +643,9 @@ if __name__ == "__main__":
         results = []
         for phone_number in args["phone_numbers"]:
             n = " ".join(phone_number)
-            result = json.dumps(lookup.search(n, args["default_region"]))
+            result = lookup.search(n, args["default_region"])
             results.append(result)
-        print("[{}]".format(",".join(results)))
+        print(json.dumps(results))
         exit(0)
 
     except Exception as e:
