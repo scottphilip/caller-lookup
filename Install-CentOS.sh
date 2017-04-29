@@ -1,33 +1,22 @@
 #!/bin/bash
 
-cd /tmp
+cd ~
 
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[0;33m'
-NC='\033[0m'
-
-confirm() {
-    # call with a prompt string or use a default
-    read -r -p "${1:-Are you sure? [y/N]} " response
-    case "$response" in
-        [yY][eE][sS]|[yY])
-            false
-            ;;
-        *)
-            true
-            ;;
-    esac
-}
+GITHUB_MASTER_URL='https://raw.githubusercontent.com/scottphilip/caller-lookup/master'
+SUPERFECTA_SOURCES_PATH='/var/www/html/admin/modules/superfecta/sources'
+ASTERISK_AGIBIN_PATH='/var/lib/asterisk/agi-bin'
+PYTHON_VERSION='3.6.0'
+PYTHON_DOWNLOAD_URL="http://python.org/ftp/python/${PYTHON_VERSION}/Python-${PYTHON_VERSION}.tar.xz"
 
 #Check SUDO
 if [ "$EUID" -ne 0 ]
 then
-	printf "${RED}This must be run as root or with sudo.${NC}\n"
+	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
     exit
 fi
 
-read -r -p "Are you sure you want to install CallerLookup? [y/N] " response
+printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
+read -r response
 case "$response" in
     [yY][eE][sS]|[yY])
         ;;
@@ -36,84 +25,105 @@ case "$response" in
         ;;
 esac
 
-read -r -p "Do you want to save your Google Acount Credentials in the config file? [y/N] " response
+mkdir /var/lib/CallerLookup
+
+printf "\033[0;32mSaving CallerLookup.py...\032[0m\n"
+wget -O /var/lib/CallerLookup/CallerLookup.py "${GITHUB_MASTER_URL}/Python/CallerLookup.py"
+chmod +x /var/lib/CallerLookup/CallerLookup.py
+
+printf "\033[0;32mSaving CountryCodes.json...\033[0m\n"
+wget -O /var/lib/CallerLookup/CountryCodes.json "${GITHUB_MASTER_URL}/Python/CountryCodes.json"
+
+printf "\033[0;32mSaving Asterisk AGI Component...\033[0m\n"
+wget -O "${ASTERISK_AGIBIN_PATH}/Asterisk-CallerLookup.py" "${GITHUB_MASTER_URL}/Plugins/Asterisk-CallerLookup.py"
+chmod +x "${ASTERISK_AGIBIN_PATH}/Asterisk-CallerLookup.py"
+
+printf "\033[0;32mSaving Superfecta Module...\033[0m\n"
+wget -O "${SUPERFECTA_SOURCES_PATH}/source-CallerLookup.module" "${GITHUB_MASTER_URL}/Plugins/source-CallerLookup.module.php"
+
+printf "\033[0;33mDo you want to save your Google Acount Credentials in the config file? [y/N] \033[0m\n"
+read -r response
 case "$response" in
     [yY][eE][sS]|[yY])
 
-        read -r -p "Please enter your Google Account Username (Email): " username
-        read -r -p -s "Please enter your Google Account Password: " password
-        read -r -p "If 2-Step Verification is enabled, please enter TOTP secret: " otpsecret
+        printf "\033[0;33mPlease enter your Google Account Username (Email): \033[0m\n"
+        read -r username
 
-        echo "[Credentials]\n" > "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "username = $username\n" >> "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "password = $password\n" >> "/var/lib/CallerLookup/CallerLookup.ini"
-        echo "otpsecret = $otpsecret\n" >> "/var/lib/CallerLookup/CallerLookup.ini"
+        printf "\033[0;33mPlease enter your Google Account Password: \033[0m\n"
+        read -r -s password
+
+        printf "\033[0;33mIf 2-Step Verification is enabled, please enter TOTP secret: \033[0m\n"
+        read -r otpsecret
+
+        echo "[Credentials]" > "/var/lib/CallerLookup/CallerLookup.ini"
+        echo "username = $username" >> "/var/lib/CallerLookup/CallerLookup.ini"
+        echo "password = $password" >> "/var/lib/CallerLookup/CallerLookup.ini"
+        echo "otpsecret = $otpsecret" >> "/var/lib/CallerLookup/CallerLookup.ini"
+
+        printf "\033[0;32mCredentials Saved.\033[0m\n"
 
         ;;
     *)
-        echo "Installing..."
+
         ;;
 esac
 
-checkinstall() {
-    APP_VERSION="$(python -V)"
-    if [[ "$APP_VERSION" ~= "3.6" ]]
-    then
-        true
-    else
-        false
-    fi
-}
+printf "\033[0;33mDo you want to automatically download and install dependencies? [y/N] \033[0m\n"
+read -r response
+case "$response" in
+    [yY][eE][sS]|[yY])
 
-printf "${GREEN}Adding Source...${NC}\n"
-/usr/bin/yum -y install https://centos7.iuscommunity.org/ius-release.rpm
+        cd ~
 
-printf "${GREEN}Updating Packages...${NC}\n"
-/usr/bin/yum update
+        command -v python >/dev/null 2>&1 || {
+            printf "\033[0;32mPython...\033[0m\n"
+            wget "${PYTHON_DOWNLOAD_URL}"
+            tar xf "Python-${PYTHON_VERSION}.tar.xz"
+            cd "Python-${PYTHON_VERSION}"
+            eval Python-${PYTHON_VERSION}/configure --enable-optimizations
+            make && make install
+        }
 
-printf "${GREEN}ZLib...${NC}\n"
-/usr/bin/yum install zlib
+        cd ~
 
-command -v python >/dev/null 2>&1 || {
-    printf "${GREEN}Python...${NC}\n"
-    wget http://python.org/ftp/python/3.6.0/Python-3.6.0.tar.xz
-    tar xf Python-3.6.0.tar.xz
-    cd Python-3.6.0
-    ./configure --prefix=/usr/local --enable-shared LDFLAGS="-Wl,-rpath /usr/local/lib"
-    make && make install
-}
+        printf "\033[0;32mPython PIP...\033[0m\n"
+        wget get-pip.py https://bootstrap.pypa.io/get-pip.py
+        chmod +x get-pip.py
+        ./get-pip.py
 
+        printf "\033[0;32mSelenium...\033[0m\n"
+        /usr/bin/pip install selenium
 
-printf "${GREEN}Python PIP...${NC}\n"
-wget https://bootstrap.pypa.io/get-pip.py
-python3.6 get-pip.py
+        printf "\033[0;32mPhoneNumbers...\033[0m\n"
+        /usr/bin/pip install phonenumbers
 
-printf "${GREEN}Selenium...${NC}\n"
-/usr/local/bin/pip install selenium
+        printf "\033[0;32mPyotp...\033[0m\n"
+        /usr/bin/pip install pyotp
 
-printf "${GREEN}PhoneNumbers...${NC}\n"
-/usr/local/bin/pip install phonenumbers
+        printf "\033[0;32mPython AGI...\033[0m"
+        /usr/bin/pip install pyst2
 
-printf "${GREEN}Pyotp...${NC}\n"
-/usr/local/bin/pip install pyotp
+        #configparser
+        #http
+        #cookiejar
+        #parse
 
-printf "${GREEN}Python AGI...${NC}\n"
-/usr/local/bin/pip install pyst2
+        ;;
+    *)
+        ;;
+esac
 
-mkdir /var/lib/CallerLookup
-
-printf "${GREEN}Saving CallerLookup.py...${NC}\n"
-wget -O /var/lib/CallerLookup/CallerLookup.py https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Python/CallerLookup.py
-
-printf "${GREEN}Saving CountryCodes.json...${NC}\n"
-wget -O /var/lib/CallerLookup/CountryCodes.json https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Python/CountryCodes.json
-
-printf "${GREEN}Saving Asterisk AGI Component...${NC}\n"
-wget -O /var/lib/asterisk/agi-bin/Asterisk-CallerLookup.py https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Plugins/Asterisk-CallerLookup.py
-
-printf "${GREEN}Saving Superfecta Module...${NC}\n"
-wget -O /var/www/html/admin/modules/superfecta/sources/source-CallerLookup.module https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Plugins/source-CallerLookup.module.php
-
-printf "${YELLOW}Complete.${NC}\n"
-
+printf "\033[0;32mInstallation Complete.\033[0m\n"
 exit
+
+#check_installed() {
+#    false
+#}
+
+#check_version()  #VERSION COMMAND   #REQUIRED VERSION
+#{
+#    APP_VERSION="$1"
+#    test "$(printf '%s\n' "${APP_VERSION}" "$2" | sort -V | head -n 1)" != "$2";
+#}
+
+#function version_gt() { test "$(printf '%s\n' "${APP_VERSION}" "$2" | sort -V | head -n 1)" != "$2"; }

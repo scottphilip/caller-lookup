@@ -1,5 +1,17 @@
 #!/usr/bin/env python
-import sys
+
+# Usage:
+#
+#       exten => 12345,1,AGI(CallerLookup-SetCIDName.py)
+#
+# Author:       Scott Philip (sp@scottphilip.com)
+# Source:       https://github.com/scottphilip/caller-lookup/
+# Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+#               CallerLookup Copyright (C) 2017 SCOTT PHILIP
+#               This program comes with ABSOLUTELY NO WARRANTY
+#               This is free software, and you are welcome to redistribute it
+#               under certain conditions
+#               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
 
 if __name__ == '__main__':
 

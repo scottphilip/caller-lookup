@@ -1,4 +1,55 @@
 #!/usr/bin/python
+
+# usage:    CallerLookup.py [-h] --number PHONE_NUMBERS [PHONE_NUMBERS ...]
+#                       [--region DEFAULT_REGION] [--path APPLICATION_PATH]
+#                       [--settings SETTING_PATH] [--cookies COOKIES_PATH]
+#                       [--countrycodes COUNTRY_DATA_PATH] [--logpath LOG_PATH]
+#                       [--username USERNAME] [--password PASSWORD]
+#                       [--otpsecret OTPSECRET] [--debug]
+#
+#           Reverse Caller Id
+#
+#           optional arguments:
+#             -h, --help            show this help message and exit
+#             --number PHONE_NUMBERS [PHONE_NUMBERS ...], --n PHONE_NUMBERS [PHONE_NUMBERS ...]
+#                                   Phone number accepted in any standard format. When not
+#                                   in international format, the default region parameter
+#                                   must be supplied
+#             --region DEFAULT_REGION, --r DEFAULT_REGION
+#                                   The home region that the trunk belongs to. Only
+#                                   required when phone number is supplied without an
+#                                   international dialling code. Must be in CCN format.
+#                                   SeeCountryCodes.json
+#             --path APPLICATION_PATH, --p APPLICATION_PATH
+#                                   Working Directory
+#             --settings SETTING_PATH, --s SETTING_PATH
+#                                   Path to Settings INI file
+#             --cookies COOKIES_PATH, --c COOKIES_PATH
+#                                   Path to Cookie store file
+#             --countrycodes COUNTRY_DATA_PATH, --cc COUNTRY_DATA_PATH
+#                                   Path to Country Codes data file
+#             --logpath LOG_PATH, --l LOG_PATH
+#                                   Path to Log Directory
+#             --username USERNAME, --un USERNAME
+#                                   Google Account Username
+#             --password PASSWORD, --pw PASSWORD
+#                                   Google Account Password
+#             --otpsecret OTPSECRET, --otp OTPSECRET
+#                                   Google Account Two-Factor Auth Secret
+#             --debug               Debug mode
+#
+#           Example: CallerLookup.py --number +12024561111
+#                    CallerLookup.py --number 02079309000 --region gb
+#
+# Author:       Scott Philip (sp@scottphilip.com)
+# Source:       https://github.com/scottphilip/caller-lookup/
+# Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+#               CallerLookup Copyright (C) 2017 SCOTT PHILIP
+#               This program comes with ABSOLUTELY NO WARRANTY
+#               This is free software, and you are welcome to redistribute it
+#               under certain conditions
+#               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
+
 import argparse
 import configparser
 import datetime
@@ -8,8 +59,7 @@ import json
 import logging
 import os
 import time
-import urllib.parse
-import urllib.request
+import urllib
 
 import phonenumbers
 import requests.cookies
