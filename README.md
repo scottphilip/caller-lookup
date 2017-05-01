@@ -12,7 +12,7 @@ Python Wrapper for TrueCaller.  Retains Google cookies to reauthenticate quickly
 
 ## Dependencies
 
- - Python 2.7
+ - Python 2.6.6
    - PhoneNumbers
    - Selenium
    - Requests
