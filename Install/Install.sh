@@ -19,6 +19,7 @@
 #  ARGS
 #-----------------------------------------------------------------------------------------------
 IS_USER_PRESENT=1
+RESPONSE=""
 while [ "$1" != "" ]; do
     case $1 in
         -s | --silent )         IS_USER_PRESENT=0
@@ -32,13 +33,11 @@ done
 #-----------------------------------------------------------------------------------------------
 #  SETUP
 #-----------------------------------------------------------------------------------------------
-RESPONSE=""
 if [ "$EUID" -ne 0 ]
 then
 	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
     exit 2
 fi
-
 if [ "$IS_USER_PRESENT" == 1 ]
 then
     printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
