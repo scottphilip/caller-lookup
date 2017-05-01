@@ -22,9 +22,9 @@ Requires a Google Account to authenticate against.  Supports Two step authentica
 ### CentOS (FreePBX)
 
 ```
-wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Install.sh
-chmod +x Install.sh
-sudo ./Install.sh #--silent
+wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Install.sh -O CallerLookupInstall.sh
+chmod +x CallerLookupInstall.sh
+sudo ./CallerLookupInstall.sh #--silent
 ```
 
 ## Issues
