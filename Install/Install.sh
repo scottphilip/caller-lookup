@@ -112,7 +112,7 @@ fi
 if [ ${IS_PYTHON3_INSTALLED} == 1 ]
 then
     cd ~
-    wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Setup.py
+    wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Setup.py -O Setup.py
     chmod +x Setup.py
     RUN_CMD="python${PY_VERSION} Setup.py"
     eval ${RUN_CMD}
