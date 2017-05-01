@@ -8,11 +8,11 @@
 #               under certain conditions
 #               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
 
-printf "\033[0;32mInstalling Python 3.6.1 Dependencies...\032[0m\n"
+printf "\033[0;32mInstalling Python 3.6.1 Dependencies... \032[0m \n"
 
 if [ -n "$(command -v yum)" ]
 then
-    yum update
+    yum update -y
     yum groupinstall -y "development tools"
     yum install -y zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel expat-devel
     yum install -y wget
@@ -26,12 +26,12 @@ then
 fi
 
 cd ~
-printf "\033[0;Downloading Python 3.6.1...\032[0m\n"
+printf "\033[0;Downloading Python 3.6.1... \032[0m \n"
 wget http://python.org/ftp/python/3.6.1/Python-3.6.1.tar.xz
 wget https://bootstrap.pypa.io/get-pip.py
 tar xf Python-3.6.1.tar.xz
 cd Python-3.6.1
-printf "\033[0;Installing Python 3.6.1...\032[0m\n"
+printf "\033[0;Installing Python 3.6.1... \032[0m \n"
 ./configure --prefix=/usr --enable-shared LDFLAGS="-Wl,-rpath /usr/lib"
 ./make
 ./make altinstall

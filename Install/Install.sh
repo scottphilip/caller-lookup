@@ -1,4 +1,5 @@
 #!/bin/bash
+
 #
 # Usage:
 #
@@ -38,12 +39,12 @@ then
 	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
     exit 2
 fi
-if [ "$IS_USER_PRESENT" == 1 ]
+if [ ${IS_USER_PRESENT} == 1 ]
 then
     printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
     read -r RESPONSE
 fi
-case "$RESPONSE" in
+case ${RESPONSE} in
     [yY][eE][sS]|[yY])
         ;;
     *)
@@ -59,7 +60,7 @@ PY_VERSION=""
 if [ -n "$(command -v python)" ]
 then
     VERSION="$(python -c 'import sys; print(sys.version_info[0])')"
-    if [ VERSION == "3" ]
+    if [ ${VERSION} == "3" ]
     then
         IS_PYTHON3_INSTALLED=1
     fi
@@ -75,20 +76,20 @@ fi
 #-----------------------------------------------------------------------------------------------
 #  Install Python
 #-----------------------------------------------------------------------------------------------
-if [ IS_PYTHON3_INSTALLED == 0 ]
+if [ ${IS_PYTHON3_INSTALLED} == 0 ]
 then
-    if [ IS_USER_PRESENT == 1 ]
+    if [ ${IS_USER_PRESENT} == 1 ]
     then
         printf "\033[0;33mCannot find Python3 which is required to continue.  Do you want to download and install Python 3.6.1? [y/N] \033[0m\n"
         read -r RESPONSE
     fi
-    case "$RESPONSE" in
+    case ${RESPONSE} in
         [yY][eE][sS]|[yY])
             cd ~
-            wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Install-Python3.6.1.sh
+            wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Install-Python3.6.1.sh -O Install-Python3.6.1.sh
             chmod +x Install-Python3.6.1.sh
-            RESULT_PY_INSTALL = ./Install-Python3.6.1.sh
-            if [ RESULT_PY_INSTALL == 0 ]
+            ./Install-Python3.6.1.sh
+            if [ $? -eq 0 ]
             then
                 IS_PYTHON3_INSTALLED=1
             fi
@@ -102,7 +103,7 @@ fi
 #-----------------------------------------------------------------------------------------------
 #  Setup.py
 #-----------------------------------------------------------------------------------------------
-if [ IS_PYTHON3_INSTALLED == 1 ]
+if [ ${IS_PYTHON3_INSTALLED} == 1 ]
 then
     cd ~
     wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Setup.py
