@@ -115,6 +115,10 @@ then
     wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Setup.py -O Setup.py
     chmod +x Setup.py
     RUN_CMD="python${PY_VERSION} Setup.py"
+    if [ ${IS_USER_PRESENT} == 0 ]
+    then
+        RUN_CMD=${RUN_CMD}+" --silent"
+    fi
     eval ${RUN_CMD}
 fi
 

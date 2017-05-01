@@ -75,26 +75,32 @@ class CallerLookupInstall:
 
 if __name__ == "__main__":
 
+    is_user_present = True
+    for arg in sys.argv:
+        if arg == "--silent":
+            is_user_present = False
+
     try:
 
-        os.makedirs(CallerLookupInstall.LOCAL_FOLDER_PATH + os.path.pathsep, exist_ok=True)
+        if not os.path.isdir(CallerLookupInstall.LOCAL_FOLDER_PATH):
+            os.makedirs(CallerLookupInstall.LOCAL_FOLDER_PATH)
+        if is_user_present:
+            if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
 
-        if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
+                config_username = CallerLookupInstall.get_input("Please enter Google Account Username:")
 
-            config_username = CallerLookupInstall.get_input("Please enter Google Account Username:")
+                config_password = CallerLookupInstall.get_input("Please enter Google Account Password:")
 
-            config_password = CallerLookupInstall.get_input("Please enter Google Account Password:")
+                config_otpsecret = CallerLookupInstall.get_input("If enabled, enter the One Time Passcode Secret "
+                                                                 "(Leave blank if not enabled):")
 
-            config_otpsecret = CallerLookupInstall.get_input("If enabled, enter the One Time Passcode Secret "
-                                                             "(Leave blank if not enabled):")
+                with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
+                    ini.write("[Credentials]\n")
+                    ini.write("username = {0}\n".format(config_username))
+                    ini.write("password = {0}\n".format(config_password))
+                    ini.write("otpsecret = {0}\n".format(config_otpsecret))
 
-            with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
-                ini.write("[Credentials]\n")
-                ini.write("username = {0}\n".format(config_username))
-                ini.write("password = {0}\n".format(config_password))
-                ini.write("otpsecret = {0}\n".format(config_otpsecret))
-
-        if CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
+        if not is_user_present or CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
 
             CallerLookupInstall.install_package("urllib")
             CallerLookupInstall.install_package("selenium")
