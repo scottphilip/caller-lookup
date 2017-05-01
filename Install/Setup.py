@@ -33,7 +33,7 @@ class CallerLookupInstall:
     GITHUB_MASTER_URL = "https://raw.githubusercontent.com/scottphilip/caller-lookup/master"
     SUPERFECTA_SOURCES_PATH = "/var/www/html/admin/modules/superfecta/sources"
     ASTERISK_AGIBIN_PATH = "/var/lib/asterisk/agi-bin"
-    INTERPRETER_PYTHON_PATH = "#!{0}".format(sys.executable)
+    INTERPRETER_PYTHON_PATH = "#!{0}\n".format(sys.executable)
 
     @staticmethod
     def install_package(package_name):
