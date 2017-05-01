@@ -77,7 +77,7 @@ if __name__ == "__main__":
 
     try:
 
-        os.makedirs(CallerLookupInstall.LOCAL_FOLDER_PATH, exist_ok=True)
+        os.makedirs(CallerLookupInstall.LOCAL_FOLDER_PATH + os.path.pathsep, exist_ok=True)
 
         if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
 
