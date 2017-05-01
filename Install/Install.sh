@@ -36,12 +36,12 @@ done
 #-----------------------------------------------------------------------------------------------
 if [ "$EUID" -ne 0 ]
 then
-	printf "\033[0;31mThis must be run as root or with sudo.\033[0m\n"
+	printf "\033[0;91mThis must be run as root or with sudo.\033[0m\n"
     exit 2
 fi
 if [ ${IS_USER_PRESENT} == 1 ]
 then
-    printf "\033[0;33mAre you sure you want to install CallerLookup? [y/N] \033[0m\n"
+    printf "\033[0;94mAre you sure you want to install CallerLookup? [y/N]\033[0m\n"
     read -r RESPONSE
 fi
 case ${RESPONSE} in
@@ -71,8 +71,6 @@ else
         IS_PYTHON3_INSTALLED=1
     fi
 fi
-
-
 #-----------------------------------------------------------------------------------------------
 #  Install Python
 #-----------------------------------------------------------------------------------------------
@@ -80,7 +78,8 @@ if [ ${IS_PYTHON3_INSTALLED} == 0 ]
 then
     if [ ${IS_USER_PRESENT} == 1 ]
     then
-        printf "\033[0;33mCannot find Python3 which is required to continue.  Do you want to download and install Python 3.6.1? [y/N] \033[0m\n"
+        printf "\033[0;93mCannot find Python3 which is required to continue.\033[0m\n"
+        printf "\033[0;94mDo you want to download and install Python 3.6.1? [y/N]\033[0m\n"
         read -r RESPONSE
     fi
     case ${RESPONSE} in
@@ -114,5 +113,5 @@ fi
 #-----------------------------------------------------------------------------------------------
 #  FINISH
 #-----------------------------------------------------------------------------------------------
-printf "\033[0;32mInstallation Complete.\033[0m\n"
+printf "\033[92mInstallation Complete.\033[0m\n"
 exit 0
