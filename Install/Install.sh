@@ -59,7 +59,8 @@ IS_PYTHON3_INSTALLED=0
 PY_VERSION=""
 if [ -n "$(command -v python)" ]
 then
-    if [ $(python -V) == Python 3.* ]
+    VERSION="$(python -c 'import sys; print(sys.version_info[0])')"
+    if [ VERSION == "3" ]
     then
         IS_PYTHON3_INSTALLED=1
     fi
