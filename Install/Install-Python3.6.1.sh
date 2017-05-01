@@ -1,4 +1,5 @@
 #!/bin/bash
+#
 # Author:       Scott Philip (sp@scottphilip.com)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
@@ -33,8 +34,5 @@ tar xf Python-3.6.1.tar.xz
 cd Python-3.6.1
 printf "\033[92mInstalling Python 3.6.1... \033[0m\n"
 ./configure --prefix=/usr --enable-shared LDFLAGS="-Wl,-rpath /usr/lib"
-./make
-./make altinstall
+make altinstall
 
-cd ~
-python3.6.1 get-pip.py

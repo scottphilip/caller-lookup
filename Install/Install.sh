@@ -1,5 +1,4 @@
 #!/bin/bash
-
 #
 # Usage:
 #
@@ -36,12 +35,12 @@ done
 #-----------------------------------------------------------------------------------------------
 if [ "$EUID" -ne 0 ]
 then
-	printf "\033[0;91mThis must be run as root or with sudo.\033[0m\n"
+	printf "\033[91mThis must be run as root or with sudo.\033[0m\n"
     exit 2
 fi
 if [ ${IS_USER_PRESENT} == 1 ]
 then
-    printf "\033[0;94mAre you sure you want to install CallerLookup? [y/N]\033[0m\n"
+    printf "\033[94mAre you sure you want to install CallerLookup? [y/N]\033[0m\n"
     read -r RESPONSE
 fi
 case ${RESPONSE} in
@@ -57,18 +56,25 @@ esac
 #-----------------------------------------------------------------------------------------------
 IS_PYTHON3_INSTALLED=0
 PY_VERSION=""
-if [ -n "$(command -v python)" ]
+
+if [ -n "$(command -v python3.6)" ]
 then
-    VERSION="$(python -c 'import sys; print(sys.version_info[0])')"
-    if [ ${VERSION} == "3" ]
-    then
-        IS_PYTHON3_INSTALLED=1
-    fi
+    PY_VERSION="3.6"
+    IS_PYTHON3_INSTALLED=1
 else
     if [ -n "$(command -v python3)" ]
     then
         PY_VERSION="3"
         IS_PYTHON3_INSTALLED=1
+    else
+        if [ -n "$(command -v python)" ]
+        then
+            VERSION="$(python -c 'import sys; print(sys.version_info[0])')"
+            if [ ${VERSION} == "3" ]
+            then
+                IS_PYTHON3_INSTALLED=1
+            fi
+        fi
     fi
 fi
 #-----------------------------------------------------------------------------------------------
@@ -78,8 +84,8 @@ if [ ${IS_PYTHON3_INSTALLED} == 0 ]
 then
     if [ ${IS_USER_PRESENT} == 1 ]
     then
-        printf "\033[0;93mCannot find Python3 which is required to continue.\033[0m\n"
-        printf "\033[0;94mDo you want to download and install Python 3.6.1? [y/N]\033[0m\n"
+        printf "\033[93mCannot find Python3 which is required to continue.\033[0m\n"
+        printf "\033[94mDo you want to download and install Python 3.6.1? [y/N]\033[0m\n"
         read -r RESPONSE
     fi
     case ${RESPONSE} in
@@ -91,6 +97,7 @@ then
             if [ $? -eq 0 ]
             then
                 IS_PYTHON3_INSTALLED=1
+                PY_VERSION="3.6"
             fi
             ;;
         *)
@@ -107,7 +114,8 @@ then
     cd ~
     wget https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Setup.py
     chmod +x Setup.py
-    $(command -v python${PY_VERSION} Setup.py)
+    RUN_CMD="python${PY_VERSION} Setup.py"
+    eval ${RUN_CMD}
 fi
 
 #-----------------------------------------------------------------------------------------------

@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+#
 # Author:       Scott Philip (sp@scottphilip.com)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
@@ -87,10 +89,10 @@ if __name__ == "__main__":
                                                              "(Leave blank if not enabled):")
 
             with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
-                ini.write("[Credentials]")
-                ini.write("username = {0}".format(config_username))
-                ini.write("password = {0}".format(config_password))
-                ini.write("otpsecret = {0}".format(config_otpsecret))
+                ini.write("[Credentials]\n")
+                ini.write("username = {0}\n".format(config_username))
+                ini.write("password = {0}\n".format(config_password))
+                ini.write("otpsecret = {0}\n".format(config_otpsecret))
 
         if CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
 
@@ -112,6 +114,10 @@ if __name__ == "__main__":
         CallerLookupInstall.download_file(url, path)
         CallerLookupInstall.set_interpreter(path)
 
+        url = CallerLookupInstall.GITHUB_MASTER_URL + "/Python/CountryCodes.json"
+        path = CallerLookupInstall.LOCAL_FOLDER_PATH + "/CountryCodes.json"
+        CallerLookupInstall.download_file(url, path)
+
         if os.path.exists(CallerLookupInstall.ASTERISK_AGIBIN_PATH):
             url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/AsteriskAGI-SetCIDName.py"
             path = CallerLookupInstall.ASTERISK_AGIBIN_PATH + "/AsteriskAGI-SetCIDName.py"
@@ -124,7 +130,6 @@ if __name__ == "__main__":
             path = CallerLookupInstall.SUPERFECTA_SOURCES_PATH + "/sources-CallerLookup.module"
             CallerLookupInstall.download_file(url, path)
 
-        CallerLookupInstall.print_update("Complete.")
         exit(0)
 
     except Exception as e:
