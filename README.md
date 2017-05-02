@@ -19,7 +19,7 @@ Python Wrapper for TrueCaller
  - Selenium
  - PhantomJS
 
-## Authentication:
+## Authentication
 Requires a Google Account to authenticate against.  Supports Dual Factor Authentication as well as Android/iOS Google App Permission.
 
 ## Installer
