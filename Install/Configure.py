@@ -17,7 +17,7 @@ if __name__ == "__main__":
 
         from whiptailPy import Whiptail
 
-        wt = Whiptail(title="Configuration")
+        wt = Whiptail(title="Configuration", auto_exit=False)
 
         response = wt.confirm(msg="Do you want to save the Google Account credentials as part of the "
                                   "configuration?",
@@ -25,7 +25,7 @@ if __name__ == "__main__":
                               yes="Yes",
                               no="No")
         if response == False:
-            exit(1)
+            exit(0)
 
         if os.path.isfile(LOCAL_INI_PATH):
             if not wt.confirm(msg="Do you want to overwrite the existing configuration?",
@@ -40,15 +40,21 @@ if __name__ == "__main__":
             msg="Email Address:",
             default="",
             password=False)
+        if email is None:
+            exit(0)
 
         password = wt.prompt(
             msg="Password:",
             default="",
             password=True)
+        if password is None:
+            exit(0)
 
         otp_secret = wt.prompt(msg="OTP Secret:", default="", password=False) \
             if wt.confirm(msg="Is Two Factor Authentication enabled?", default="Yo", yes="Yes", no="No") \
             else ""
+        if otp_secret is None:
+            exit(0)
 
         if not os.path.isdir(LOCAL_FOLDER_PATH):
             os.makedirs(LOCAL_FOLDER_PATH)
