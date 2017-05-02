@@ -1,5 +1,2 @@
 .*/
-*.log
-*.cookies
-ScreenShots
-ScreenShots/*
+/.Help/
