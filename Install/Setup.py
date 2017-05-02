@@ -10,6 +10,7 @@
 #               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
 import sys
 assert sys.version_info >= (3,0,0)
+import subprocess
 import os
 import sys
 import stat
@@ -84,54 +85,65 @@ if __name__ == "__main__":
 
         if not os.path.isdir(CallerLookupInstall.LOCAL_FOLDER_PATH):
             os.makedirs(CallerLookupInstall.LOCAL_FOLDER_PATH)
+
         if is_user_present:
-            if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
-
-                config_username = CallerLookupInstall.get_input("Please enter Google Account Username:")
-
-                config_password = CallerLookupInstall.get_input("Please enter Google Account Password:")
-
-                config_otpsecret = CallerLookupInstall.get_input("If enabled, enter the One Time Passcode Secret "
-                                                                 "(Leave blank if not enabled):")
-
-                with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
-                    ini.write("[Credentials]\n")
-                    ini.write("username = {0}\n".format(config_username))
-                    ini.write("password = {0}\n".format(config_password))
-                    ini.write("otpsecret = {0}\n".format(config_otpsecret))
+            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Install/Configure.py"
+            path = "~/Configure.py"
+            CallerLookupInstall.download_file(url, path)
+            subprocess.call([sys.executable, path])
+            # if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
+            #
+            #     config_username = CallerLookupInstall.get_input("Please enter Google Account Username:")
+            #
+            #     config_password = CallerLookupInstall.get_input("Please enter Google Account Password:")
+            #
+            #     config_otpsecret = CallerLookupInstall.get_input("If enabled, enter the One Time Passcode Secret "
+            #                                                      "(Leave blank if not enabled):")
+            #
+            #     with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
+            #         ini.write("[Credentials]\n")
+            #         ini.write("username = {0}\n".format(config_username))
+            #         ini.write("password = {0}\n".format(config_password))
+            #         ini.write("otpsecret = {0}\n".format(config_otpsecret))
 
         if not is_user_present or CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
 
             # import urllib
             CallerLookupInstall.install_package("urllib")
-            # import urllib.parse
-            # import urllib.request
+
             # import requests.cookies
-            # from selenium import webdriver
+            CallerLookupInstall.install_package("requests")
+
+            # import selenium
             CallerLookupInstall.install_package("selenium")
+
             # import phonenumbers
             CallerLookupInstall.install_package("phonenumbers")
+
             # import pyotp
             CallerLookupInstall.install_package("pyotp")
+
             #import asterisk
             CallerLookupInstall.install_package("pyst2")
+
             # import configparser
             CallerLookupInstall.install_package("configparser")
-            # import http.cookiejar
+
+            # import http
             CallerLookupInstall.install_package("http")
-            CallerLookupInstall.install_package("cookiejar")
+
             # import argparse
-            CallerLookupInstall.install_package("parse")
-            CallerLookupInstall.install_package("requests")
-            # import collections
-            # import datetime
+            CallerLookupInstall.install_package("argparse")
+
             # import gzip
+            CallerLookupInstall.install_package("gzip")
+
             # import json
+            CallerLookupInstall.install_package("json")
             # import logging
-            # import os
-            # import time
+
+            CallerLookupInstall.install_package("ntpath")
             # import ntpath
-            #
 
         CallerLookupInstall.print_update("Downloading CallerLookup Files ...")
 
