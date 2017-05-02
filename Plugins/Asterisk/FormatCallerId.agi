@@ -1,0 +1,90 @@
+#!/usr/bin/python3
+#
+# Usage:        exten => s,1,AGI(FormatCallerId.agi, TRUNK_REGION, [FORMAT, REJECT_INVALID]);
+#               Example;     AGI(FormatCallerId.agi, DE, International, True)
+#                            AGI(FormatCallerId.agi, GB)
+#
+# Parameters:   TRUNK_REGION      TWO CHARACTER COUNTRY CODE (GB, DE, US)
+#
+#               FORMAT            Unchanged*
+#                                 E164                  +442083661177
+#                                 International         +44 20 8366 1177
+#                                 National              020 8366 1177
+#
+#               REJECT_INVALID    True/False*
+#               (*) Denotes Default
+# Author:       Scott Philip (sp@scottphilip.com)
+# Source:       https://github.com/scottphilip/caller-lookup/
+# Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+#               CallerLookup Copyright (C) 2017 SCOTT PHILIP
+#               This program comes with ABSOLUTELY NO WARRANTY
+#               This is free software, and you are welcome to redistribute it
+#               under certain conditions
+#               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
+#
+if __name__ == '__main__':
+
+    import asterisk
+    import phonenumbers
+
+    log_format = "CallerLookup/FormatCallerId => {0}"
+    agi = asterisk.agi()
+
+    try:
+
+        agi.verbose(log_format.format("Starting ..."))
+
+        # Parameters
+        trunk_caller_id = agi.env["agi_callerid"] \
+            if "agi_callerid" in agi.env \
+            else None
+        arg_region = str(agi.env["agi_arg_1"]).upper() \
+            if "agi_arg_1" in agi.env and not agi.env["agi_arg_1"] is None \
+            else None
+        arg_format = str(agi.env["agi_arg_2"]) \
+            if "agi_arg_2" in agi.env and not agi.env["agi_arg_2"] is None \
+            else None
+        arg_reject = str(agi.env["agi_arg_3"]).upper() \
+            if "agi_arg_3" in agi.env and not agi.env["agi_arg_3"] is None \
+            else None
+        if arg_region is None:
+            agi.verbose(log_format.format("Configuration Error: Region parameter must be supplied."))
+            exit(1)
+
+        # Exit if Caller Id is unavailable
+        if trunk_caller_id is None or len(trunk_caller_id) == 0:
+            agi.verbose(log_format.format("Trunk has not provided Caller Id. Exiting with code 1."))
+            exit(1)
+
+        # Parse Caller Id
+        parsed = phonenumbers.parse(trunk_caller_id, arg_region)
+
+        # Reject Invalid Numbers
+        if arg_reject is not None:
+            arg_reject = str(arg_reject).upper()
+            if arg_reject == "TRUE" or arg_reject == "1":
+                format_valid = phonenumbers.is_valid_number(parsed)
+                if not format_valid:
+                    agi.verbose(log_format.format("Invalid Caller Id. Bye."))
+                    agi.stream_file('privacy-unident')
+                    agi.stream_file('goodbye')
+                    agi.hangup()
+                    exit(0)
+
+        # Format Number
+        phone_number_format = None
+        if hasattr(phonenumbers.PhoneNumberFormat, arg_format):
+            phone_number_format = getattr(phonenumbers.PhoneNumberFormat, arg_format)
+        if phone_number_format is not None:
+            updated_number = phonenumbers.format_number(parsed, phone_number_format)
+            if trunk_caller_id != updated_number:
+                agi.verbose(log_format.format("Updating Caller Id to {0}".format(updated_number)))
+                agi.env["agi_callerid"] = updated_number
+            else:
+                agi.verbose(log_format.format("No formatting change required."))
+
+        exit(0)
+
+    except Exception as e:
+        agi.verbose(log_format.format("Exception {0}".format(str(e))))
+        exit(1)

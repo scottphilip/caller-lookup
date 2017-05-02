@@ -102,16 +102,36 @@ if __name__ == "__main__":
 
         if not is_user_present or CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
 
+            # import urllib
             CallerLookupInstall.install_package("urllib")
+            # import urllib.parse
+            # import urllib.request
+            # import requests.cookies
+            # from selenium import webdriver
             CallerLookupInstall.install_package("selenium")
+            # import phonenumbers
             CallerLookupInstall.install_package("phonenumbers")
+            # import pyotp
             CallerLookupInstall.install_package("pyotp")
+            #import asterisk
             CallerLookupInstall.install_package("pyst2")
+            # import configparser
             CallerLookupInstall.install_package("configparser")
+            # import http.cookiejar
             CallerLookupInstall.install_package("http")
             CallerLookupInstall.install_package("cookiejar")
+            # import argparse
             CallerLookupInstall.install_package("parse")
             CallerLookupInstall.install_package("requests")
+            # import collections
+            # import datetime
+            # import gzip
+            # import json
+            # import logging
+            # import os
+            # import time
+            # import ntpath
+            #
 
         CallerLookupInstall.print_update("Downloading CallerLookup Files ...")
 
@@ -124,15 +144,23 @@ if __name__ == "__main__":
         path = CallerLookupInstall.LOCAL_FOLDER_PATH + "/CountryCodes.json"
         CallerLookupInstall.download_file(url, path)
 
+        # Asterisk Plugins
         if os.path.exists(CallerLookupInstall.ASTERISK_AGIBIN_PATH):
-            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/AsteriskAGI-SetCIDName.py"
-            path = CallerLookupInstall.ASTERISK_AGIBIN_PATH + "/AsteriskAGI-SetCIDName.py"
+
+            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/Asterisk/SetCallerIdName.agi"
+            path = CallerLookupInstall.ASTERISK_AGIBIN_PATH + "/SetCallerIdName.agi"
             CallerLookupInstall.download_file(url, path)
             CallerLookupInstall.set_interpreter(path)
 
+            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/Asterisk/FormatCallerId.agi"
+            path = CallerLookupInstall.ASTERISK_AGIBIN_PATH + "/FormatCallerId.agi"
+            CallerLookupInstall.download_file(url, path)
+            CallerLookupInstall.set_interpreter(path)
 
+        # FreePBX Plugins
         if os.path.exists(CallerLookupInstall.SUPERFECTA_SOURCES_PATH):
-            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/source-CallerLookup.module.php"
+
+            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/FreePBX/source-CallerLookup.module.php"
             path = CallerLookupInstall.SUPERFECTA_SOURCES_PATH + "/sources-CallerLookup.module"
             CallerLookupInstall.download_file(url, path)
 
@@ -142,4 +170,3 @@ if __name__ == "__main__":
 
         print("{0}An error has occurred during setup.{1}{2}".format(C.FAIL, str(e), C.ENDC))
         exit(1)
-

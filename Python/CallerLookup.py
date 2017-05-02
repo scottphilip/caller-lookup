@@ -54,6 +54,7 @@ import sys
 
 assert sys.version_info >= (3,0,0)
 
+import collections
 import argparse
 import configparser
 import datetime
@@ -68,6 +69,8 @@ import requests.cookies
 import urllib
 import urllib.parse
 import urllib.request
+import pyotp
+import ntpath
 
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -95,7 +98,6 @@ class CallerLookup(object):
                         setattr(self, key, dict_values[key])
 
         def set_root_path(self, path):
-            import ntpath
             self.setting_path = os.path.join(path, ntpath.basename(self.setting_path))
             self.cookies_path = os.path.join(path, ntpath.basename(self.cookies_path))
             self.country_data_path = os.path.join(path, ntpath.basename(self.country_data_path))
@@ -352,7 +354,6 @@ class CallerLookup(object):
                     if self.settings.otpsecret is None:
                         save_screenshot("TwoFactorAuth")
                         raise Exception("Sign in requires Two Step authentication but otpsecret has not been set.")
-                    import pyotp
                     return pyotp.TOTP(self.settings.otpsecret).now()
 
                 def is_token_created():
@@ -597,7 +598,6 @@ class CallerLookup(object):
             response_code = response.getcode()
             log_helper.debug("{:20s} {}".format("STATUS CODE", response_code))
             response_headers = response.info()
-            import collections
             result_dict = collections.defaultdict(list)
             for key, value in response_headers.items():
                 result_dict[key].append(value)
