@@ -105,7 +105,25 @@ then
             ;;
     esac
 fi
-
+#-----------------------------------------------------------------------------------------------
+#  Install PhantomJS
+#-----------------------------------------------------------------------------------------------
+if [ ${IS_USER_PRESENT} == 1 ]
+then
+    printf "\033[94mDo you want to download and install PhantomJS? [y/N]\033[0m\n"
+    read -r RESPONSE
+fi
+case ${RESPONSE} in
+    [yY][eE][sS]|[yY])
+        cd ~
+        wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Install/Install-PhantomJS.sh -O Install-PhantomJS.sh
+        chmod +x Install-PhantomJS.sh
+        ./Install-PhantomJS.sh
+        ;;
+    *)
+        exit 1
+        ;;
+esac
 #-----------------------------------------------------------------------------------------------
 #  Setup.py
 #-----------------------------------------------------------------------------------------------

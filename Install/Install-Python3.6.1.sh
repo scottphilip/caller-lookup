@@ -36,3 +36,4 @@ printf "\033[92mInstalling Python 3.6.1... \033[0m\n"
 ./configure --prefix=/usr --enable-shared LDFLAGS="-Wl,-rpath /usr/lib"
 make altinstall
 
+exit 0
