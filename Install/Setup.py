@@ -68,16 +68,7 @@ class CallerLookupInstall:
 
     @staticmethod
     def set_permissions(file_path):
-        st = os.stat(file_path)
-        os.chmod(file_path, st.st_mode | stat.S_IEXEC)
-        try:
-            import pwd
-            import grp
-            uid = pwd.getpwnam("asterisk").pw_uid
-            gid = grp.getgrnam("asterisk").gr_gid
-            os.chown(file_path, uid, gid)
-        except:
-            ignore = True
+        os.chmod(file_path, 0o7777)
 
     @staticmethod
     def download_file(file_url, file_path):
@@ -162,7 +153,7 @@ if __name__ == "__main__":
         # FreePBX Plugins
         if os.path.exists(CallerLookupInstall.SUPERFECTA_SOURCES_PATH):
 
-            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/FreePBX/source-CallerLookup.module.php"
+            url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/FreePBX/source-CallerLookup.module"
             path = CallerLookupInstall.SUPERFECTA_SOURCES_PATH + "/source-CallerLookup.module"
             CallerLookupInstall.download_file(url, path)
             CallerLookupInstall.set_permissions(path)
