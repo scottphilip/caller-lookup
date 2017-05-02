@@ -68,7 +68,8 @@ class CallerLookupInstall:
 
     @staticmethod
     def set_permissions(file_path):
-        os.chmod(file_path, 0o7777)
+        st = os.stat(file_path)
+        os.chmod(file_path, st.st_mode | 0o7777)
 
     @staticmethod
     def download_file(file_url, file_path):
