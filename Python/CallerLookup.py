@@ -160,10 +160,15 @@ class CallerLookup(object):
         def format_phone_number(format_number, format_region):
             format_valid = False
             try:
+                if not format_number.startswith("+") \
+                        and not format_number.startswith("0"):
+                    format_number = "+" + format_number
+
                 phone_number = phonenumbers.parse(format_number, format_region.upper())
                 format_region = get_phone_number_region(str(phone_number.country_code), format_region).upper()
                 format_number = phonenumbers.format_number(phone_number, phonenumbers.PhoneNumberFormat.E164)
                 format_valid = phonenumbers.is_valid_number(phone_number)
+
             except:
                 ignore = True
             return format_valid, format_number, format_region
@@ -191,6 +196,7 @@ class CallerLookup(object):
 
             (is_valid_number, phone_number, default_region) = \
                 format_phone_number(phone_number, default_region)
+
             if not is_valid_number:
                 log_helper.info("{0:20s} {1:30s} {2} ({3})".format("SEARCH",
                                                                    "Invalid Number",
@@ -491,6 +497,7 @@ class CallerLookup(object):
 
             logging.getLogger().setLevel(logging.INFO)
             self._log = logging.getLogger("CallerLookup")
+            self._log.propagate = False
             handler = logging.FileHandler(self.settings.log_path)
             formatter = logging.Formatter('%(asctime)s   >>   %(levelname)8s   >>   %(message)s')
             handler.setFormatter(formatter)
@@ -500,12 +507,12 @@ class CallerLookup(object):
             if self.settings.is_debug:
                 logging.getLogger().setLevel(logging.DEBUG)
                 self._log.setLevel(logging.DEBUG)
-                req_log = logging.getLogger("requests.packages.urllib3")
-                req_log.setLevel(logging.DEBUG)
-                req_log.propagate = True
+                self.req_log = logging.getLogger("requests.packages.urllib3")
+                self.req_log.setLevel(logging.DEBUG)
+                self.req_log.propagate = False
                 req_handler = logging.FileHandler(os.path.join(self.path, "CallerLookup.HttpHandler.log"))
                 req_handler.setFormatter(formatter)
-                req_log.addHandler(req_handler)
+                self.req_log.addHandler(req_handler)
 
         def debug(self, message):
             """Log Debug Message"""
