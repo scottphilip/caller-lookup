@@ -64,8 +64,20 @@ class CallerLookupInstall:
         with open(file_path, "w") as fout:
             for line in lines:
                 fout.write(line)
+        CallerLookupInstall.set_permissions(file_path)
+
+    @staticmethod
+    def set_permissions(file_path):
         st = os.stat(file_path)
         os.chmod(file_path, st.st_mode | stat.S_IEXEC)
+        try:
+            import pwd
+            import grp
+            uid = pwd.getpwnam("asterisk").pw_uid
+            gid = grp.getgrnam("asterisk").gr_gid
+            os.chown(file_path, uid, gid)
+        except:
+            ignore = True
 
     @staticmethod
     def download_file(file_url, file_path):
@@ -92,20 +104,6 @@ if __name__ == "__main__":
             CallerLookupInstall.print_update("Downloading {0} to {1} ...".format(url, path))
             CallerLookupInstall.download_file(url, path)
             subprocess.call([sys.executable, path])
-            # if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
-            #
-            #     config_username = CallerLookupInstall.get_input("Please enter Google Account Username:")
-            #
-            #     config_password = CallerLookupInstall.get_input("Please enter Google Account Password:")
-            #
-            #     config_otpsecret = CallerLookupInstall.get_input("If enabled, enter the One Time Passcode Secret "
-            #                                                      "(Leave blank if not enabled):")
-            #
-            #     with open(CallerLookupInstall.LOCAL_FOLDER_PATH + "/CallerLookup.ini", "w+") as ini:
-            #         ini.write("[Credentials]\n")
-            #         ini.write("username = {0}\n".format(config_username))
-            #         ini.write("password = {0}\n".format(config_password))
-            #         ini.write("otpsecret = {0}\n".format(config_otpsecret))
 
         if not is_user_present or CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
 
@@ -146,6 +144,7 @@ if __name__ == "__main__":
         url = CallerLookupInstall.GITHUB_MASTER_URL + "/Python/CountryCodes.json"
         path = CallerLookupInstall.LOCAL_FOLDER_PATH + "/CountryCodes.json"
         CallerLookupInstall.download_file(url, path)
+        CallerLookupInstall.set_permissions(path)
 
         # Asterisk Plugins
         if os.path.exists(CallerLookupInstall.ASTERISK_AGIBIN_PATH):
@@ -164,8 +163,9 @@ if __name__ == "__main__":
         if os.path.exists(CallerLookupInstall.SUPERFECTA_SOURCES_PATH):
 
             url = CallerLookupInstall.GITHUB_MASTER_URL + "/Plugins/FreePBX/source-CallerLookup.module.php"
-            path = CallerLookupInstall.SUPERFECTA_SOURCES_PATH + "/sources-CallerLookup.module"
+            path = CallerLookupInstall.SUPERFECTA_SOURCES_PATH + "/source-CallerLookup.module"
             CallerLookupInstall.download_file(url, path)
+            CallerLookupInstall.set_permissions(path)
 
         exit(0)
 
