@@ -1,4 +1,5 @@
 #!/usr/bin/python3.6
+import pip
 
 if __name__ == "__main__":
 
@@ -15,16 +16,20 @@ if __name__ == "__main__":
             if arg == "--silent":
                 exit(0)
 
-        from whiptailPy import Whiptail
+        import pip
 
-        wt = Whiptail(title="Configuration", auto_exit=False)
+        pip.main(["install", "whiptailPy"])
+
+        import whiptailPy
+
+        wt = whiptailPy.Whiptail(title="Configuration", auto_exit=False)
 
         response = wt.confirm(msg="Do you want to save the Google Account credentials as part of the "
                                   "configuration?",
                               default="yes",
                               yes="Yes",
                               no="No")
-        if response == False:
+        if not response:
             exit(0)
 
         if os.path.isfile(LOCAL_INI_PATH):
@@ -75,4 +80,3 @@ if __name__ == "__main__":
         sys.stdout.write("\033[F")
         sys.stdout.write("\033[K")
         print("\033[92mConfiguration Complete.\033[0m")
-
