@@ -88,7 +88,8 @@ if __name__ == "__main__":
 
         if is_user_present:
             url = CallerLookupInstall.GITHUB_MASTER_URL + "/Install/Configure.py"
-            path = "~/Configure.py"
+            path = os.path.expanduser("~") + "/Configure.py"
+            CallerLookupInstall.print_update("Downloading {0} to {1} ...".format(url, path))
             CallerLookupInstall.download_file(url, path)
             subprocess.call([sys.executable, path])
             # if CallerLookupInstall.confirm("Do you want to save the Google Credentials in a configuration file?"):
@@ -107,9 +108,6 @@ if __name__ == "__main__":
             #         ini.write("otpsecret = {0}\n".format(config_otpsecret))
 
         if not is_user_present or CallerLookupInstall.confirm("Do you want to install the required Python Packages?"):
-
-            # import urllib
-            CallerLookupInstall.install_package("urllib")
 
             # import requests.cookies
             CallerLookupInstall.install_package("requests")
@@ -135,15 +133,8 @@ if __name__ == "__main__":
             # import argparse
             CallerLookupInstall.install_package("argparse")
 
-            # import gzip
-            CallerLookupInstall.install_package("gzip")
-
             # import json
             CallerLookupInstall.install_package("json")
-            # import logging
-
-            CallerLookupInstall.install_package("ntpath")
-            # import ntpath
 
         CallerLookupInstall.print_update("Downloading CallerLookup Files ...")
 
