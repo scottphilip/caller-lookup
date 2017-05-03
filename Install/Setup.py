@@ -13,7 +13,6 @@ assert sys.version_info >= (3,0,0)
 import subprocess
 import os
 import sys
-import stat
 import pip
 import urllib
 import urllib.request
@@ -122,9 +121,6 @@ if __name__ == "__main__":
 
             # import argparse
             CallerLookupInstall.install_package("argparse")
-
-            # import json
-            CallerLookupInstall.install_package("json")
 
         CallerLookupInstall.print_update("Downloading CallerLookup Files ...")
 

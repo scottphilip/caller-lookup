@@ -1,5 +1,4 @@
 # Caller Lookup
-
 Python Wrapper for TrueCaller
 
 ## Features
@@ -10,7 +9,7 @@ Python Wrapper for TrueCaller
    * Dual Factor Authentication Support
    * Cache Google Refresh Cookies
  * FreePBX Superfecta Source Module 
- * Asterisk AGI CName Script 
+ * Asterisk AGI CName & Number Format Scripts
 
 ## Dependencies
 
@@ -19,7 +18,7 @@ Python Wrapper for TrueCaller
  - Selenium
  - PhantomJS
 
-## Authentication:
+## Authentication
 Requires a Google Account to authenticate against.  Supports Dual Factor Authentication as well as Android/iOS Google App Permission.
 
 ## Installer
