@@ -52,7 +52,7 @@ if __name__ == "__main__":
             password=True)
 
         otp_secret = wt.prompt(msg="OTP Secret:", default="", password=False) \
-            if wt.confirm(msg="Is Two Factor Authentication enabled?", default="Yo", yes="Yes", no="No") \
+            if wt.confirm(msg="Is Two Factor Authentication enabled?", default="Yes", yes="Yes", no="No") \
             else ""
 
         if not os.path.isdir(LOCAL_FOLDER_PATH):
