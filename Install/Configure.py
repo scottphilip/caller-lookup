@@ -62,7 +62,7 @@ if __name__ == "__main__":
             ini.write("[Credentials]\n")
             ini.write("username = {0}\n".format(email))
             ini.write("password = {0}\n".format(password))
-            ini.write("otpsecret = {0}\n".format(otp_secret))
+            ini.write("otp_secret = {0}\n".format(otp_secret))
 
         wt.title = "Configuration"
         wt.alert("Configuration Saved.")

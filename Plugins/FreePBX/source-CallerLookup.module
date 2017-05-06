@@ -8,6 +8,7 @@
 //               This is free software, and you are welcome to redistribute it
 //               under certain conditions
 //               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
+//
 class CallerLookup extends superfecta_base
 {
     private $ccn_codes = array(
@@ -253,16 +254,16 @@ class CallerLookup extends superfecta_base
           'default' => "<h4>Google Account Credentials:</h4><input type='hidden' id='AccountInfo' name='AccountInfo' value='internal' />",
           'type' => 'info'
         ),
-        'Username' => array(
-          'description' => "Email",
+        'Google_Username' => array(
+          'description' => "Google Email",
           'type' => 'text'
         ),
-        'Password' => array(
-          'description' => "Password",
+        'Google_Password' => array(
+          'description' => "Google Password",
           'type' => 'password'
         ),
-        'OTP_Secret' => array(
-          'description' => "2-Factor Login Secret",
+        'Google_OTP_Secret' => array(
+          'description' => "Google Dual-Factor Secret",
           'type' => 'text'
         ),
         'Default_Region' => array(
@@ -514,15 +515,15 @@ class CallerLookup extends superfecta_base
         'type' => 'select',
         'option' => array(
                 1 => "Never",
-                2 => "1",
-                3 => "2",
-                4 => "3 (Recommended)",
-                5 => "4",
-                6 => "5",
-                7 => "6",
-                8 => "7",
-                9 => "8",
-                10 => "9"
+                2 => "10%",
+                3 => "20%",
+                4 => "30% (Recommended)",
+                5 => "40%",
+                6 => "50%",
+                7 => "60%",
+                8 => "70%",
+                9 => "80%",
+                10 => "90%"
             ),
             'default' => '4'
         ),
@@ -531,14 +532,22 @@ class CallerLookup extends superfecta_base
           'type' => 'info'
         ),
         'Add_to_Phonebook' => array(
-          'description' => "Add Names to Phonebook? (When not marked as Spam)",
-          'type' => 'checkbox',
-          'default' => 'false'
+        'description' => "Add Names to Asterisk Phonebook? (When not marked as Spam)",
+        'type' => 'select',
+        'option' => array(
+                1 => "No",
+                2 => "Yes"
+            ),
+            'default' => '1'
         ),
         'Add_to_Blacklist' => array(
-          'description' => "Add Spam Calls to Blacklist?",
-          'type' => 'checkbox',
-          'default' => 'false'
+        'description' => "Add Spam Calls to Asterisk Blacklist?",
+        'type' => 'select',
+        'option' => array(
+                1 => "No",
+                2 => "Yes"
+            ),
+            'default' => '1'
         )
     );
 
@@ -547,21 +556,29 @@ class CallerLookup extends superfecta_base
         $this->spam = false;
         $is_debug = $this->debug;
         $result_name = NULL;
+        $is_add_phonebook = False;
+        $is_add_blacklist = False;
 
-        $username = (string)$run_param['Username'];
-        $password = (string)$run_param['Password'];
-        $otpsecret = (string)$run_param['OTP_Secret'];
-
-        $spam_threshold = $run_param['Spam_Threshold'] == 1 ? 0 : $run_param['Spam_Threshold'] - 1;
-        $is_add_phonebook = $run_param['Add_to_Phonebook'];
-        $is_add_blacklist = $run_param['Add_to_Blacklist'];
+        $username = (string)$run_param['Google_Username'];
+        $password = (string)$run_param['Google_Password'];
+        $otpsecret = (string)$run_param['Google_OTP_Secret'];
         $default_region = $this->ccn_codes[$run_param['Default_Region']];
-
+        $spam_threshold = $run_param['Spam_Threshold'] == 1 ? 0 : (($run_param['Spam_Threshold'] - 1) * 10);
         $this->DebugPrint(sprintf("CallerLookup: Username -> %s", $username));
         $this->DebugPrint(sprintf("CallerLookup: Default Region -> %s", $default_region));
         $this->DebugPrint(sprintf("CallerLookup: Threshold -> %s", $spam_threshold));
-        $this->DebugPrint(sprintf("CallerLookup: Add To Phonebook? -> %s", $is_add_phonebook?"Yes":"No"));
-        $this->DebugPrint(sprintf("CallerLookup: Add To Blacklist? -> %s", $is_add_blacklist?"Yes":"No"));
+
+        if ($run_param['Add_to_Phonebook'] == 2)
+        {
+            $this->DebugPrint("CallerLookup: Add Phonebook");
+            $is_add_phonebook = True;
+        }
+
+        if ($run_param['Add_to_Blacklist'] == 2)
+        {
+            $this->DebugPrint("CallerLookup: Add Blacklist");
+            $is_add_blacklist = True;
+        }
 
         $script_path = '/var/lib/CallerLookup/CallerLookup.py';
 
@@ -580,14 +597,11 @@ class CallerLookup extends superfecta_base
         {
             $command .= " --debug";
         }
-        $this->DebugPrint(sprintf("CallerLookup: Command -> %s", $command));
 
         try
         {
             $result = exec($command, $output, $return_var);
-            $this->DebugPrint(sprintf("CallerLookup: Result Code -> %s", (string)$return_var));
             $result_utf = utf8_decode($result);
-            $this->DebugPrint(sprintf("CallerLookup: Decoded: -> %s", $result_utf));
         }
         catch (Exception $e)
         {
@@ -602,45 +616,53 @@ class CallerLookup extends superfecta_base
             {
                 $result = $results[0];
 
-                if (isset($result['result']) && $result['result'] == "success")
+                if (isset($result['result']))
                 {
-                    $this->DebugPrint("CallerLookup: Result Success");
+                    $result_value = $result['result'];
 
-                    if ($result['score'] >= 0)
+                    if ($result_value == "success")
                     {
-                        $this->DebugPrint("CallerLookup: Score = ".$result['score']);
-
-                        if (($result['score'] * 10) < $spam_threshold)
+                        if ($result['score'] >= 0)
                         {
-                            $this->spam = true;
-                        }
-                    }
+                            $this->DebugPrint("CallerLookup: Score = ".$result['score']);
 
-                    if (trim($result['name']))
-                    {
-                        $this->DebugPrint("CallerLookup: Name = ".$result['name']);
-                        $result_name = $result['name'];
-                    }
-
-                    if ($this->spam)
-                    {
-                        if ($is_add_blacklist)
-                        {
-                            if (is_null($result_name))
+                            if ($result['score'] < $spam_threshold)
                             {
-                                $result_name = "SPAM";
+                                $this->DebugPrint("CallerLookup: Score is below threshold of ".$spam_threshold."%.  Marking call as spam.");
+                                $this->spam = true;
                             }
-                            $this->DebugPrint("CallerLookup: Blacklist - $result_name ($thenumber)");
-                            $this->save_db_entry('blacklist', trim($thenumber), trim($result_name));
+                        }
+
+                        if (trim($result['name']))
+                        {
+                            $result_name = $result['name'];
+                        }
+
+                        if ($this->spam)
+                        {
+                            if ($is_add_blacklist)
+                            {
+                                if (is_null($result_name))
+                                {
+                                    $result_name = "SPAM";
+                                }
+                                $result_name = $result_name." (Score: ".$result['score']."%)"
+                                $this->DebugPrint("CallerLookup: Blacklist - $result_name ($thenumber)");
+                                $this->save_db_entry('blacklist', trim($thenumber), trim($result_name));
+                            }
+                        }
+                        else
+                        {
+                            if ($is_add_phonebook && !is_null($result_name))
+                            {
+                                $this->DebugPrint("CallerLookup: Phonebook - $result_name ($thenumber)");
+                                $this->save_db_entry('cidname', trim($thenumber), trim($result_name));
+                            }
                         }
                     }
-                    else
+                    else if ($result_value == "invalid_number")
                     {
-                        if ($is_add_phonebook && !is_null($result_name))
-                        {
-                            $this->DebugPrint("CallerLookup: Phonebook - $result_name ($thenumber)");
-                            $this->save_db_entry('cidname', trim($thenumber), trim($result_name));
-                        }
+                        $result_name = "Invalid Number";
                     }
                 }
             }
