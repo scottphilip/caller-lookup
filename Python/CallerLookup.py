@@ -25,9 +25,9 @@ import phonenumbers
 import requests.cookies
 import urllib.parse
 import urllib.request
+import logging
 import ntpath
 import datetime
-import logging
 import os
 import time
 import urllib
@@ -101,7 +101,7 @@ class CallerLookup(object):
         self.settings = caller_lookup_parameters
         global log_helper
         if log_helper is None:
-            log_helper = LogHelper(self.settings)
+            log_helper = LogHelper(self.settings.log_path, self.settings.is_debug)
         log_helper.debug_line_break()
         self.generator = TokenGenerator(self.settings)
 
@@ -434,6 +434,57 @@ class GoogleServiceLogin(object):
         return self.driver.execute_script("return {0}".format(self.return_script))
 
 
+class LogHelper(object):
+
+    def __init__(self, log_path, is_debug=False):
+        self.log_path = log_path
+        self.is_debug = is_debug
+        self.path = os.path.dirname(self.log_path)
+
+        if len(self.path) > 0:
+            if not os.path.exists(self.path):
+                os.makedirs(self.path)
+        self._log = logging.getLogger("CallerLookup")
+        self._log.propagate = False
+        handler = logging.FileHandler(self.log_path)
+        formatter = logging.Formatter('%(asctime)s   >>   %(levelname)8s   >>   %(message)s')
+        handler.setFormatter(formatter)
+        self._log.addHandler(handler)
+        self._log.setLevel(logging.INFO)
+        if self.is_debug:
+            self._log.setLevel(logging.DEBUG)
+
+    def debug_line_break(self):
+        line_break = ("*******************************************************************"
+                      "*****************************************")
+        self._log.debug("")
+        self._log.debug("")
+        self._log.debug(line_break)
+
+    def debug(self, major="", minor="", message=""):
+        """Log Debug Message"""
+        self._log.debug("{0:20s} {1:30s} {2}".format(major, minor, message))
+
+    def info(self, major="", minor="", message=""):
+        """Log Info Message"""
+        self._log.info("{0:20s} {1:30s} {2}".format(major, minor, message))
+
+    def warning(self, major="", minor="", message=""):
+        """Log Warning Message"""
+        self._log.warning("{0:20s} {1:30s} {2}".format(major, minor, message))
+
+    def error(self, major="", minor="", message=""):
+        """Log Error Message"""
+        self._log.error("{0:20s} {1:30s} {2}".format(major, minor, message))
+
+    def format(self, message):
+        if message is not None:
+            if hasattr(message, "encode"):
+                return message.encode()
+        return message
+
+
+
 class HttpHandler(object):
     class NoRedirect(urllib.request.HTTPErrorProcessor):
         def http_response(self, request, response):
@@ -574,57 +625,6 @@ class SettingHelper(object):
         with open(setting_path, 'w') as configfile:
             config.write(configfile)
 
-
-class LogHelper(object):
-    def __init__(self, settings):
-        self.settings = settings
-        self.path = os.path.dirname(self.settings.log_path)
-
-        if len(self.path) > 0:
-            if not os.path.exists(self.path):
-                os.makedirs(self.path)
-        self._log = logging.getLogger("CallerLookup")
-        self._log.propagate = False
-        handler = logging.FileHandler(self.settings.log_path)
-        formatter = logging.Formatter('%(asctime)s   >>   %(levelname)8s   >>   %(message)s')
-        handler.setFormatter(formatter)
-        self._log.addHandler(handler)
-        self._log.setLevel(logging.INFO)
-
-        if self.settings.is_debug:
-            self._log.setLevel(logging.DEBUG)
-
-    def debug_line_break(self):
-        line_break = ("*******************************************************************"
-                      "*****************************************")
-        self._log.debug("")
-        self._log.debug("")
-        self._log.debug(line_break)
-
-    def debug(self, major="", minor="", message=""):
-        """Log Debug Message"""
-        self._log.debug("{0:20s} {1:30s} {2}".format(major, minor, message))
-
-    def info(self, major="", minor="", message=""):
-        """Log Info Message"""
-        self._log.info("{0:20s} {1:30s} {2}".format(major, minor, message))
-
-    def warning(self, major="", minor="", message=""):
-        """Log Warning Message"""
-        self._log.warning("{0:20s} {1:30s} {2}".format(major, minor, message))
-
-    def error(self, major="", minor="", message=""):
-        """Log Error Message"""
-        self._log.error("{0:20s} {1:30s} {2}".format(major, minor, message))
-
-    def format(self, message):
-        if message is not None:
-            if hasattr(message, "encode"):
-                return message.encode()
-        return message
-
-
-log_helper = None
 
 if __name__ == "__main__":
 

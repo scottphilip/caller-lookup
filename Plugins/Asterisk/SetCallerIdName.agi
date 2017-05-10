@@ -51,7 +51,7 @@ if __name__ == '__main__':
     try:
 
         agi = asterisk.agi()
-        agi.verbose("CallerLookup AGI Started")
+        agi.verbose("CallerLookup=>SetCallerIdName")
 
         caller_id = agi.env["agi_callerid"] if "agi_callerid" in agi.env else None
         if caller_id is None:

@@ -9,7 +9,7 @@
 #               under certain conditions
 #               https://github.com/scottphilip/caller-lookup/blob/master/LICENSE.md
 
-printf "\033[92mInstalling Python 3.6.1 Dependencies...\033[0m\n"
+printf "\033[92mInstalling Python 3.5.3 Dependencies...\033[0m\n"
 
 if [ -n "$(command -v yum)" ]
 then
@@ -27,12 +27,12 @@ then
 fi
 
 cd ~
-printf "\033[92mDownloading Python 3.6.1... \033[0m\n"
-wget http://python.org/ftp/python/3.6.1/Python-3.6.1.tar.xz
+printf "\033[92mDownloading Python 3.5.3... \033[0m\n"
+wget http://python.org/ftp/python/3.5.3/Python-3.5.3.tar.xz
 wget https://bootstrap.pypa.io/get-pip.py
-tar xf Python-3.6.1.tar.xz
-cd Python-3.6.1
-printf "\033[92mInstalling Python 3.6.1... \033[0m\n"
+tar xf Python-3.5.3.tar.xz
+cd Python-3.5.3
+printf "\033[92mInstalling Python 3.5.3... \033[0m\n"
 ./configure --prefix=/usr --enable-shared LDFLAGS="-Wl,-rpath /usr/lib"
 make && make altinstall
 
