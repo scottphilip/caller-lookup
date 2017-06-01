@@ -31,11 +31,6 @@ wget -q https://raw.githubusercontent.com/scottphilip/caller-lookup/master/Insta
 chmod +x Install.sh
 sudo ./Install.sh 
 ```
-## Wiki
-[Help pages are over at the wiki.](https://github.com/scottphilip/caller-lookup/wiki/Contents)
-
-## Issues
-[Please feel free to log any bugs or feature requests](https://github.com/scottphilip/caller-lookup/issues).
 
 ## Credits
 ##### Scott Philip 
