@@ -1,0 +1,50 @@
+
+class CallerLookupLabel:
+    RESULT = "RESULT"
+    NUMBER = "NUMBER"
+    REGION = "REGION"
+    ADDRESS = "ADDRESS"
+    MESSAGE = "MESSAGE"
+    NAME = "NAME"
+    NUMBER_E164 = "NUMBER_E164"
+    NUMBER_NATIONAL = "NUMBER_NATIONAL"
+    REGION_DIAL_CODE = "REGION_DIAL_CODE"
+    SCORE = "SCORE"
+    TIME_TAKEN = "TIME_TAKEN"
+    COUNTRY_CODE = "COUNTRY_CODE"
+    IS_VALID = "IS_VALID"
+    COUNTRY_INT_DIAL_CODE = "COUNTRY_INT_DIAL_CODE"
+    SUCCESS = "SUCCESS"
+    INVALID_NUMBER = "INVALID_NUMBER"
+    ERROR = "ERROR"
+    UNKNOWN = "UNKNOWN"
+
+
+class CallerLookupErrors:
+    COUNTRY_NOT_FOUND = "COUNTRY_NOT_FOUND"
+    INVALID_COUNTRY_DATA = "INVALID_COUNTRY_DATA"
+
+class CallerLookupKeys(object):
+    URL_HOST = "www.truecaller.com"
+    URL_REFERER = "https://www.truecaller.com/"
+    URL_SEARCH = "https://www.truecaller.com/api/search?"
+    URL_TOKEN = "https://www.truecaller.com/api/auth/google?clientId=4"
+    OAUTH2_CLIENT_ID = "1051333251514-p0jdvav4228ebsu820jd3l3cqc7off2g.apps.googleusercontent.com"
+    OAUTH2_REDIRECT_URI = "https://www.truecaller.com/auth/google/callback"
+    OAUTH2_SCOPE = "https://www.googleapis.com/auth/userinfo.email " \
+                   "https://www.googleapis.com/auth/userinfo.profile " \
+                   "https://www.google.com/m8/feeds/"
+    GET_TOKEN_JAVASCRIPT = "localStorage.getItem('tcToken')"
+    KEY_TYPE = "type"
+    KEY_COUNTRY_CODE = "countryCode"
+    KEY_Q = "q"
+    KEY_DATA = "data"
+    KEY_SCORE = "score"
+    KEY_ADDRESSES = "addresses"
+    KEY_ADDRESS = "address"
+    KEY_PHONES = "phones"
+    KEY_E164_FORMAT = "e164format"
+    KEY_NATIONAL_FORMAT = "nationalFormat"
+    KEY_DIALLING_CODE = "diallingCode"
+    KEY_ACCESS_TOKEN = "accessToken"
+    KEY_NAME = "name"

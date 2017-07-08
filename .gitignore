@@ -1,2 +1,6 @@
-.*/
 /.Ignore/
+/.idea/
+/build/
+/dist/
+.gitignore
+.travis.yml
