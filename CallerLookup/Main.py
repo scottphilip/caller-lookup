@@ -12,7 +12,7 @@ from CallerLookup.Strings import CallerLookupLabel
 
 class CallerLookup(object):
     """
-    Reverse Caller Identity
+    Caller Lookup - Reverse Caller Id
     """
 
     def __init__(self,
