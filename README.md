@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/scottphilip/caller-lookup.svg?branch=0.1)](https://travis-ci.org/scottphilip/caller-lookup)
+[![Build Status](https://travis-ci.org/scottphilip/caller-lookup.svg?branch=1.0)](https://travis-ci.org/scottphilip/caller-lookup)
 
 Caller Lookup
 =============
