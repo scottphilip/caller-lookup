@@ -1,2 +1,5 @@
-.*/
 /.Ignore/
+/.idea/
+/build/
+/dist/
+CallerLookup/__pycache__/
