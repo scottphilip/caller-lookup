@@ -1,0 +1,23 @@
+language: python
+
+python:
+  - 2.7
+  - 3.3
+  - 3.4
+  - 3.5
+  - 3.6
+
+install:
+  - pip install -r REQUIREMENTS.txt
+  - python setup.py install
+
+script:
+  - python setup.py test
+
+deploy:
+  provider: pypi
+  user: scottphilip
+  password:
+    secure: "LSKWPvFCA+H7XkTDcJhMZfkXuifAnsmI/N/WMGkxJj4t9NN9ysHwQZhRoHOppuqz1DZOyn/ghrj08OS+z4IMTlBbKieebZa/l9/47UHG8XWYZxHt5Vy87ey3sdqrDnNrP2kkVMfA0xvmQbfzmzoqJf8kLpPb4cvvyo8dulEgBsNMiDplGgwiZxCWXWNn3hIXt2Z3dx/AGrEYtIlvQzi8TCUO3FeWmxUePqH7yBMuWuIHipZdV37CUEUfPIscrg9v7SipdDt542dGDzbzWX1jKklnWiwMcUlEhlKbCv/L1Iam8pFGgoCCPmEKH/uyhNRjxiNweGqal94kJDztxh7N1Dx6MheUtLzarwExSQWdnsGMAarZz5oX2LA5Xdk3RgJoCU6oqcHdEiYkDi/GdOx3mkIrL6xS+UAa/jT10F3ob+yGs0agy51RG0y6iCiWd9Ob8uytvLte4nH8YeJI2WGlonzBKlU+8nZG1QA44rfPMd8pHr0cH0eL39R4zZGX+09bBfrMexZxAQ1io5kT1nlcStXgXMZfIrhwNkcRvJRJAN8vMq0TLQbfNdyUqhPrdvk88URlkEWLs6/2TaqmfBtFL3InpJCXDh2fQdsVynQ6EcZdrbMIf5X1kBIE9zm74H58Ufc4NoR+mwxE5JU1mgbwqqesgbc6O5dMGauRyJJqCGw="
+  on:
+    all_branches: true
