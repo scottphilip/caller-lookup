@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      0.1 (10 July 2017)
+# Version:      1.1 (13 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -35,9 +35,7 @@ class CallerLookupErrors:
 
 
 class CallerLookupKeys(object):
-    URL_HOST = "www.truecaller.com"
-    URL_REFERER = "https://www.truecaller.com/"
-    URL_SEARCH = "https://www.truecaller.com/api/search?"
+    URL_SEARCH = "http://www.truecaller.com/api/search?"
     URL_TOKEN = "https://www.truecaller.com/api/auth/google?clientId=4"
     OAUTH2_CLIENT_ID = "1051333251514-p0jdvav4228ebsu820jd3l3cqc7off2g.apps.googleusercontent.com"
     OAUTH2_REDIRECT_URI = "https://www.truecaller.com/auth/google/callback"

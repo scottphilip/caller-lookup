@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      0.1 (10 July 2017)
+# Version:      1.1 (13 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -8,15 +8,14 @@ from logging import getLogger, DEBUG, INFO, StreamHandler, Formatter
 
 
 def demo():
-
     username = get_input("Google Account Email:")
     password = get_input("Google Account Password:")
     otp_secret = get_input("Google Account OTP Secret (Blank if none):")
     int_dial_code = get_input("International Dialling Code of the receiving line:")
 
     with CallerLookup(account_email=username,
-                                 account_password=password,
-                                 account_otp_secret=otp_secret) as caller_lookup:
+                      account_password=password,
+                      account_otp_secret=otp_secret) as caller_lookup:
 
         while True:
             search_number = get_input("Phone Number to search (Leave Blank to exit):")
@@ -32,6 +31,7 @@ def get_input(prompt):
     except NameError:
         pass
     print(input(prompt))
+
 
 if __name__ == "__main__":
 
@@ -82,16 +82,14 @@ if __name__ == "__main__":
     consoleHandler = StreamHandler()
     logger.addHandler(consoleHandler)
 
-    with CallerLookup(account_email=args["account_email"],
-                      account_password=args["account_password"],
-                      account_otp_secret=args["account_otp_secret"],
-                      is_debug=args["is_debug"],
-                      logger=logger) as caller_lookup:
+    caller_lookup = CallerLookup(account_email=args["account_email"],
+                                 account_password=args["account_password"],
+                                 account_otp_secret=args["account_otp_secret"],
+                                 is_debug=args["is_debug"],
+                                 logger=logger)
 
-        for phone_number in args["phone_numbers"]:
+    for phone_number in args["phone_numbers"]:
+        response = caller_lookup.search(" ".join(phone_number),
+                                        int_dial_code=args["int_dial_code"])
 
-            response = caller_lookup.search(" ".join(phone_number),
-                                            int_dial_code=args["int_dial_code"])
-
-            print(str(response))
-
+        print(str(response))

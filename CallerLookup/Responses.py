@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      0.1 (10 July 2017)
+# Version:      1.1 (13 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -17,8 +17,7 @@ def get_response_error(message):
             CallerLookupLabel.MESSAGE: message}
 
 
-def get_response_success(number_data, data, start_time=None):
-    from time import time
+def get_response_success(number_data, data):
 
     result = {CallerLookupLabel.RESULT: CallerLookupLabel.UNKNOWN,
                    CallerLookupLabel.SCORE: 100}
@@ -48,9 +47,5 @@ def get_response_success(number_data, data, start_time=None):
     if CallerLookupKeys.KEY_NAME in data:
         result[CallerLookupLabel.NAME] = data[CallerLookupKeys.KEY_NAME]
         result[CallerLookupLabel.RESULT] = CallerLookupLabel.SUCCESS
-
-    if start_time is not None:
-        elapsed = time() - start_time
-        result[CallerLookupLabel.TIME_TAKEN] = round(elapsed, 5)
 
     return result

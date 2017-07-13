@@ -7,7 +7,7 @@ setup(
     author='Scott Philip',
     author_email='sp@scottphilip.com',
     packages=['CallerLookup'],
-    version='1.0',
+    version='1.1',
     install_requires=['GoogleToken', 'phonenumbers'],
     license='GNU (v3) License',
     keywords=['Reverse Caller Identity', 'TrueCaller'],
