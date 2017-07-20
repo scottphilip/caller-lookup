@@ -75,4 +75,4 @@ GNU General Public License (Version 3, 29 June 2007)
 CallerLookup Copyright © 2017 Scott Philip
 
 .. |BuildStatus| image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
-:target: https://travis-ci.org/scottphilip/caller-lookup
+   :target: https://travis-ci.org/scottphilip/caller-lookup
