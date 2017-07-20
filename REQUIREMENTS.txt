@@ -1,2 +1,5 @@
+cryptography
+appdirs
+requests
 GoogleToken
 phonenumbers
