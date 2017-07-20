@@ -14,11 +14,6 @@ install:
 script:
   - python setup.py test
 
-branches:
-  only:
-  - development
-  - master
-
 deploy:
   provider: pypi
   user: scottphilip
