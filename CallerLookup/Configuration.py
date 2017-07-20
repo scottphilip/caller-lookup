@@ -1,47 +1,329 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.1 (13 July 2017)
+# Version:      1.1 (20 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
-from GoogleToken import GoogleTokenConfiguration
-from CallerLookup.Strings import CallerLookupKeys
-from os.path import join, expanduser, isdir
+from os.path import join, isdir, isfile
 from os import makedirs
+from appdirs import AppDirs
+from datetime import datetime, timedelta
+from configparser import ConfigParser
+from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys
+from CallerLookup.Utils.Logs import *
+from CallerLookup.Utils.Crypto import *
 
 
-class CallerLookupConfiguration(GoogleTokenConfiguration):
-    def __init__(self,
-                 account_email=None,
-                 account_password=None,
-                 account_otp_secret=None,
-                 cookie_storage_path=None,
-                 logger=None,
-                 phantomjs_path=None,
-                 phantomjs_log_path=None,
-                 image_path=None,
-                 is_debug=False,
-                 cache_path=None,
-                 cache_folder_path=None):
-        super(CallerLookupConfiguration, self).__init__(
-            account_email=account_email,
-            account_password=account_password,
-            account_otp_secret=account_otp_secret,
-            cookie_storage_path=cookie_storage_path,
-            oauth_client_id=CallerLookupKeys.OAUTH2_CLIENT_ID,
-            oauth_redirect_uri=CallerLookupKeys.OAUTH2_REDIRECT_URI,
-            oauth_scope=CallerLookupKeys.OAUTH2_SCOPE,
-            logger=logger,
-            image_path=image_path,
-            execute_script=CallerLookupKeys.GET_TOKEN_JAVASCRIPT,
-            phantomjs_path=phantomjs_path,
-            phantomjs_log_path = phantomjs_log_path
-        )
-        if cache_path is None:
-            if not isdir(join(expanduser("~"), "CallerLookup")):
-                makedirs(join(expanduser("~"), "CallerLookup"))
-        self.cache_path = join(expanduser("~"), "CallerLookup", "tokens.txt") if cache_path is None else cache_path
-        if cache_folder_path is None:
-            if not isdir(join(expanduser("~"), "CallerLookup", "Cache")):
-                makedirs(join(expanduser("~"), "CallerLookup", "Cache"))
-        self.cache_folder_path = join(expanduser("~"), "CallerLookup", "Cache") if cache_folder_path is None else cache_folder_path
-        self.is_debug = is_debug
+def __get_value(str_value):
+    if str_value is None:
+        return None
+    if not str_value:
+        return None
+    if str(str_value).upper() == "TRUE":
+        return True
+    if str(str_value).upper() == "FALSE":
+        return False
+    try:
+        int_value = int(str_value)
+        return int_value
+    except:
+        ignore = True
+    return str_value
+
+
+def __find_entry(key, items):
+    for item in items:
+        if item.upper() == key.upper():
+            return items[item]
+    return None
+
+
+def _pop_entry(key, default, **kwargs):
+    for a in kwargs:
+        if key.upper() == a.upper():
+            result = kwargs.pop(a)
+            return result.upper() if hasattr(result, "upper") else result
+    return default
+
+
+def __make_dir(path):
+    if not isdir(str(path)):
+        makedirs(str(path))
+
+
+def __get_config_file_path(self):
+    return join(self.config_dir, "{0}.ini".format(CallerLookupKeys.APP_NAME))
+
+
+_DEFAULT_TEMPLATE = {
+    CallerLookupConfigStrings.ACCOUNT: ""
+}
+
+_GENERAL_TEMPLATE = {
+    CallerLookupConfigStrings.PHANTOMJS_PATH: "phantomjs",
+    CallerLookupConfigStrings.IS_CACHE_ENABLED: True,
+    CallerLookupConfigStrings.IS_DEBUG: False,
+}
+
+_ACCOUNT_TEMPLATE = {
+    CallerLookupConfigStrings.ACCESS_TOKEN: "",
+    CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY: "2000-01-01 00:00:00",
+    CallerLookupConfigStrings.USERNAME: "",
+    CallerLookupConfigStrings.PASSWORD: "",
+    CallerLookupConfigStrings.SECRET: ""
+}
+
+_TEMPLATE = {
+    CallerLookupConfigStrings.DEFAULT: _DEFAULT_TEMPLATE,
+    CallerLookupConfigStrings.GENERAL: _GENERAL_TEMPLATE
+}
+
+_RUNTIME = {
+    CallerLookupConfigStrings.IS_SAVE_CREDENTIALS: True,
+    CallerLookupConfigStrings.REMOVE_ACCOUNT: None,
+    CallerLookupConfigStrings.SET_DEFAULT: None,
+}
+
+__ENCRYPT = [
+    CallerLookupConfigStrings.PASSWORD,
+    CallerLookupConfigStrings.SECRET,
+    CallerLookupConfigStrings.ACCESS_TOKEN
+]
+
+__VALID_ARGUMENTS = [
+    CallerLookupConfigStrings.NUMBER,
+    CallerLookupConfigStrings.REGION,
+    CallerLookupConfigStrings.REGION_DIAL_CODE,
+    CallerLookupConfigStrings.PHANTOMJS_PATH,
+    CallerLookupConfigStrings.IS_CACHE_ENABLED,
+    CallerLookupConfigStrings.IS_DEBUG,
+    CallerLookupConfigStrings.USERNAME,
+    CallerLookupConfigStrings.PASSWORD,
+    CallerLookupConfigStrings.SECRET,
+    CallerLookupConfigStrings.IS_SAVE_CREDENTIALS,
+    CallerLookupConfigStrings.REMOVE_ACCOUNT,
+    CallerLookupConfigStrings.SET_DEFAULT,
+    CallerLookupConfigStrings.CONFIG_DIR,
+    CallerLookupConfigStrings.DATA_DIR,
+    CallerLookupConfigStrings.LOG_DIR
+]
+
+__ARG_KEYS = {
+    CallerLookupConfigStrings.NUMBER: ["number", "number"],
+    CallerLookupConfigStrings.REGION: ["region", "trunk_region"],
+    CallerLookupConfigStrings.REGION_DIAL_CODE: ["code", "trunk_code"],
+    CallerLookupConfigStrings.PHANTOMJS_PATH: ["phantom", "path_to_phantom_js"],
+    CallerLookupConfigStrings.IS_CACHE_ENABLED: ["cache", "cache_enabled"],
+    CallerLookupConfigStrings.IS_DEBUG: ["debug", "debug_enabled"],
+    CallerLookupConfigStrings.USERNAME: ["username", "username"],
+    CallerLookupConfigStrings.PASSWORD: ["password", "password"],
+    CallerLookupConfigStrings.SECRET: ["secret", "otp_secret"],
+    CallerLookupConfigStrings.IS_SAVE_CREDENTIALS: ["savecred", "save_credentials"],
+    CallerLookupConfigStrings.REMOVE_ACCOUNT: ["remove", "remove_account"],
+    CallerLookupConfigStrings.SET_DEFAULT: ["default", "default_account_username"],
+    CallerLookupConfigStrings.CONFIG_DIR: ["config", "path_to_config_directory"],
+    CallerLookupConfigStrings.DATA_DIR: ["data", "path_to_data_directory"],
+    CallerLookupConfigStrings.LOG_DIR: ["log", "path_to_log_directory"]
+}
+
+__DEFAULT_ARGS = {
+    CallerLookupConfigStrings.IS_SAVE_CREDENTIALS: _RUNTIME[CallerLookupConfigStrings.IS_SAVE_CREDENTIALS],
+    CallerLookupConfigStrings.IS_DEBUG: _GENERAL_TEMPLATE[CallerLookupConfigStrings.IS_DEBUG],
+    CallerLookupConfigStrings.IS_CACHE_ENABLED: _GENERAL_TEMPLATE[CallerLookupConfigStrings.IS_CACHE_ENABLED],
+    CallerLookupConfigStrings.PHANTOMJS_PATH: _GENERAL_TEMPLATE[CallerLookupConfigStrings.PHANTOMJS_PATH],
+}
+
+
+def _is_cache_enabled(config):
+    if CallerLookupConfigStrings.GENERAL in config.settings:
+        if CallerLookupConfigStrings.IS_CACHE_ENABLED in config.settings[CallerLookupConfigStrings.GENERAL]:
+            return config.settings[CallerLookupConfigStrings.GENERAL][CallerLookupConfigStrings.IS_CACHE_ENABLED]
+    log_info(config, "CONFIG", "MISSING GENERAL/is_cache_enabled property")
+    return True
+
+
+def _get_cached_token(config):
+    if CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY in config.settings[config.account]:
+        if datetime.strptime(config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY],
+                             CallerLookupKeys.DATETIME_FMT) > datetime.utcnow():
+            return config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN]
+    return None
+
+
+def _clear_cached_token(config):
+    if config.account in config.settings:
+        config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN] = ""
+        config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY] = "2000-01-01 00:00:00"
+    config.save()
+
+
+def _set_cached_token(self, auth_token):
+    self.settings.update({
+        self.account: {
+            CallerLookupConfigStrings.ACCESS_TOKEN: auth_token,
+            CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY: (datetime.utcnow() + timedelta(seconds=3600)).strftime(
+                CallerLookupKeys.DATETIME_FMT),
+        }
+    })
+    self.save()
+
+
+def _is_debug(config):
+    return config.settings[CallerLookupConfigStrings.GENERAL][CallerLookupConfigStrings.IS_DEBUG]
+
+
+def _init_logger(self):
+    if self.logger is None:
+        from logging import getLogger, DEBUG, FileHandler, Formatter
+        file_handler = FileHandler(join(str(self.log_dir), "CallerLookup.log"))
+        file_handler.setFormatter(Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"))
+        self.logger = getLogger(CallerLookupKeys.APP_NAME)
+        self.logger.setLevel(DEBUG)
+        self.logger.addHandler(file_handler)
+
+
+def _init_config_runtime(self, **kwargs):
+    is_updated = False
+    config_file = ConfigParser()
+    config_file.read(__get_config_file_path(self))
+    for runtime_setting_name in self.runtime:
+        self.runtime[runtime_setting_name] = _pop_entry(runtime_setting_name,
+                                                        self.runtime[runtime_setting_name],
+                                                        **kwargs)
+    if self.runtime[CallerLookupConfigStrings.REMOVE_ACCOUNT]:
+        if self.runtime[CallerLookupConfigStrings.REMOVE_ACCOUNT] in self.settings:
+            del self.settings[self.runtime[CallerLookupConfigStrings.REMOVE_ACCOUNT]]
+        if self.runtime[CallerLookupConfigStrings.REMOVE_ACCOUNT] in config_file:
+            del config_file[self.runtime[CallerLookupConfigStrings.REMOVE_ACCOUNT]]
+        is_updated = True
+    if self.runtime[CallerLookupConfigStrings.SET_DEFAULT]:
+        if self.runtime[CallerLookupConfigStrings.SET_DEFAULT] not in config_file:
+            raise Exception("Cannot set default to account that does not exist")
+        config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] = \
+            self.runtime[CallerLookupConfigStrings.SET_DEFAULT]
+        is_updated = True
+    if is_updated:
+        if config_file is not None:
+            with open(__get_config_file_path(self), "w") as file:
+                config_file.write(file)
+
+
+def _init_config(self, **kwargs):
+    config_file = ConfigParser()
+    config_file.read(__get_config_file_path(self))
+    self.account = __find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
+    self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] \
+        if self.account is None else self.account
+    if not self.account:
+        raise Exception("Unable to determine account")
+    self.account = self.account.upper()
+    self.settings = _TEMPLATE
+    self.settings.update({self.account: _ACCOUNT_TEMPLATE})
+    for section_name in self.settings:
+        if section_name in config_file:
+            for setting_name in self.settings[section_name]:
+                if setting_name in config_file[section_name]:
+                    value = config_file[section_name][setting_name]
+                    if setting_name in __ENCRYPT:
+                        value = decrypt(section_name, value)
+                    self.settings[section_name][setting_name] = __get_value(value)
+    for key in kwargs.keys():
+        if key.upper() in _DEFAULT_TEMPLATE:
+            self.settings[CallerLookupConfigStrings.DEFAULT][key.upper()] = kwargs[key]
+        elif key.upper() in _GENERAL_TEMPLATE:
+            self.settings[CallerLookupConfigStrings.GENERAL][key.upper()] = kwargs[key]
+        elif key.upper() in _ACCOUNT_TEMPLATE:
+            if self.runtime[CallerLookupConfigStrings.IS_SAVE_CREDENTIALS]:
+                self.settings[self.account][key.upper()] = kwargs[key]
+
+
+def _init_dirs(self, config_dir, data_dir, log_dir):
+    d = AppDirs()
+    self.config_dir = join(AppDirs().site_config_dir,
+                           CallerLookupKeys.APP_NAME) if config_dir is None else config_dir
+    self.data_dir = join(d.site_data_dir, CallerLookupKeys.APP_NAME) if data_dir is None else data_dir
+    self.log_dir = join(d.user_log_dir, CallerLookupKeys.APP_NAME) if log_dir is None else log_dir
+    __make_dir(self.config_dir)
+    __make_dir(self.data_dir)
+    __make_dir(self.log_dir)
+
+
+def _save(self):
+    self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] = self.account \
+        if not self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] else \
+        self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT]
+    config_file = ConfigParser()
+    config_file.read(__get_config_file_path(self))
+    for section_name in self.settings:
+        if section_name not in config_file:
+            config_file.add_section(section_name)
+        for setting_name in self.settings[section_name]:
+            if self.settings[section_name][setting_name] is not None:
+                value = str(self.settings[section_name][setting_name])
+                if setting_name in __ENCRYPT:
+                    value = encrypt(section_name, value)
+                config_file[section_name][setting_name] = str(value)
+    with open(__get_config_file_path(self), "w") as file:
+        config_file.write(file)
+
+
+def _get_cache_dir(self):
+    result = join(self.data_dir, "Cache")
+    if not isdir(result):
+        makedirs(result)
+    return result
+
+
+class CallerLookupConfiguration(object):
+    account = None
+    config_dir = None
+    data_dir = None
+    log_dir = None
+    logger = None
+
+    settings = {}
+    runtime = _RUNTIME
+
+    def __init__(self, **kwargs):
+        _init_dirs(self,
+                   config_dir=_pop_entry(CallerLookupConfigStrings.CONFIG_DIR, None, **kwargs),
+                   data_dir=_pop_entry(CallerLookupConfigStrings.DATA_DIR, None, **kwargs),
+                   log_dir=_pop_entry(CallerLookupConfigStrings.LOG_DIR, None, **kwargs))
+        _init_logger(self)
+        _init_config_runtime(self, **kwargs)
+        _init_config(self, **kwargs)
+
+    get_cached_token = _get_cached_token
+    get_cache_dir = _get_cache_dir
+    clear_cached_token = _clear_cached_token
+    set_cached_token = _set_cached_token
+    save = _save
+    is_debug = _is_debug
+    is_cache_enabled = _is_cache_enabled
+
+
+def get_argument_parser():
+    from argparse import ArgumentParser, RawDescriptionHelpFormatter
+    from CallerLookup.Strings import CallerLookupArgParserHelp as s
+
+    parser = ArgumentParser(description=s.DESCRIPTION,
+                            formatter_class=RawDescriptionHelpFormatter)
+
+    for entry in __VALID_ARGUMENTS:
+        arg_default_value = __DEFAULT_ARGS[entry] if entry in __DEFAULT_ARGS else None
+        parser.add_argument("--{0}".format(__ARG_KEYS[entry][0]),
+                            metavar=__ARG_KEYS[entry][1].upper(),
+                            dest=entry,
+                            type=type(arg_default_value) if arg_default_value else None,
+                            help=getattr(s, entry, "") + (
+                                " (Default: {0})".format(arg_default_value) if arg_default_value else ""),
+                            default=arg_default_value,
+                            required=False)
+
+    return parser
+
+
+def extract_values(items, **kwargs):
+    results = {}
+    for item in items:
+        results.update({item: _pop_entry(item, None, **kwargs)})
+    return results

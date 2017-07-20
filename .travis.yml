@@ -14,10 +14,16 @@ install:
 script:
   - python setup.py test
 
+branches:
+  only:
+  - development
+  - master
+
 deploy:
   provider: pypi
   user: scottphilip
   password:
     secure: "kNehYsZo8LUScLVlIW3PKM9jrlTvGVnu+MpRgTfnK4J69YsdOmvB4i7bTUc+fpF/N875+hdOe80XgQBXG15S99F0v4V46gaEuHhDx+I8KuLeEmy3wENkPh5HeNjj5aAOtAD6t7J4tN72ZTSXmIfU5oBaf+17MBoW/MuCeRrATVuoWGdnOmEXLuw02YXhlns+NiPshC/qPQdthUltS5roqHTEzeX2d320UUK6lgRSVNeMy7OTGTdjO7zXCw+O+3qVfhVTlLjOsvmV/KaqiYzRkEyvqA3RvWejqPBVY8+9q/rgujZarjJsdJVDjhVHPUHDKcey2idoF2M19bpxncWNPQH3NN3vTzfwrGRBbL08S5yjNtN7j1u2PopvyQkQzmStp2rXro02xOnoRqUCbCIqcWBhCz3pWu5pxIRIKCyEfZR8+9t+6vJiPeRa5Ka+3B/wPIVMmA6xUSAWKbCLwg4guGJEeG8MCJZXy3vawOXhMnus8O8x4rFbuXeO2NUikOPke+KrkRQeub41idhTZqwrRledh5+2YJlxJ8Rxv0L+F1iSjp/NanltZotU7TEhOl1GG3JcP7SGwzz5mUpGMz30ro9rTLsmdTqTKfoXJuIunqzWkOytqBzA8TozGarak9rmIDbPTAmXYao18rl6lISJq2MDrgu0wfJRwZbQPRkisSw="
   on:
+    tags: true
     all_branches: true

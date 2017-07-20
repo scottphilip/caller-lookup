@@ -1,7 +1,30 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.1 (13 July 2017)
+# Version:      1.1 (20 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
+
+
+class CallerLookupConfigStrings:
+    NUMBER = "NUMBER"
+    REGION = "REGION"
+    REGION_DIAL_CODE = "REGION_DIAL_CODE"
+    DEFAULT = "DEFAULT"
+    GENERAL = "GENERAL"
+    ACCOUNT = "ACCOUNT"
+    PHANTOMJS_PATH = "PHANTOMJS_PATH"
+    IS_CACHE_ENABLED = "IS_CACHE_ENABLED"
+    IS_DEBUG = "IS_DEBUG"
+    ACCESS_TOKEN = "ACCESS_TOKEN"
+    ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY"
+    USERNAME = "USERNAME"
+    PASSWORD = "PASSWORD"
+    SECRET = "SECRET"
+    IS_SAVE_CREDENTIALS = "IS_SAVE_CREDENTIALS"
+    REMOVE_ACCOUNT = "REMOVE_ACCOUNT"
+    SET_DEFAULT = "SET_DEFAULT"
+    CONFIG_DIR = "CONFIG_DIR"
+    DATA_DIR = "DATA_DIR"
+    LOG_DIR = "LOG_DIR"
 
 
 class CallerLookupLabel:
@@ -10,6 +33,7 @@ class CallerLookupLabel:
     REGION = "REGION"
     ADDRESS = "ADDRESS"
     MESSAGE = "MESSAGE"
+    STACK = "STACK"
     NAME = "NAME"
     NUMBER_E164 = "NUMBER_E164"
     NUMBER_NATIONAL = "NUMBER_NATIONAL"
@@ -23,8 +47,8 @@ class CallerLookupLabel:
     INVALID_NUMBER = "INVALID_NUMBER"
     ERROR = "ERROR"
     UNKNOWN = "UNKNOWN"
-    ACCESS_TOKEN = "ACCESS_TOKEN"
-    ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY"
+    # ACCESS_TOKEN = "ACCESS_TOKEN"
+    # ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY"
 
 
 class CallerLookupErrors:
@@ -35,6 +59,7 @@ class CallerLookupErrors:
 
 
 class CallerLookupKeys(object):
+    APP_NAME = "CallerLookup"
     URL_SEARCH = "http://www.truecaller.com/api/search?"
     URL_TOKEN = "https://www.truecaller.com/api/auth/google?clientId=4"
     OAUTH2_CLIENT_ID = "1051333251514-p0jdvav4228ebsu820jd3l3cqc7off2g.apps.googleusercontent.com"
@@ -64,3 +89,23 @@ class CallerLookupKeys(object):
     HTTP_HEADER_APP_JSON = "application/json"
     HTTP_HEADER_REFERER = "referer"
     HTTP_HEADER_ORIGIN = "origin"
+    DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+
+
+class CallerLookupArgParserHelp:
+    DESCRIPTION = "Caller Lookup - Reverse Caller ID"
+    NUMBER = "Phone number to lookup"
+    REGION = "Region the trunk belongs to (eg; GB, DE, US)"
+    REGION_DIAL_CODE = "Region Dial Code the trunk belongs to (eg; 44, 49, 1)"
+    PHANTOMJS_PATH = "Path to PhantomJS binary"
+    IS_CACHE_ENABLED = "Enabled result Cache"
+    IS_DEBUG = "Debug Mode"
+    USERNAME = "Google Account Username"
+    PASSWORD = "Google Account Password"
+    SECRET = "Google Account Secret (OTP secret where account has two step authentication enabled"
+    IS_SAVE_CREDENTIALS = "Save the credentials to the configuration"
+    REMOVE_ACCOUNT = "Remove account details from configuration"
+    SET_DEFAULT = "Set the default account to use"
+    CONFIG_DIR = "Configuration Directory Path"
+    DATA_DIR = "Data Directory Path"
+    LOG_DIR = "Log Directory Path"
