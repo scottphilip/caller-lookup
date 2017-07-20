@@ -17,11 +17,11 @@ Usage
 
 .. code:: python
 
-    with CallerLookup(account_email="username@gmail.com",
-                      account_password="password",
-                      account_otp_secret="secret") as caller_lookup:
+    with CallerLookup(username="username@gmail.com",
+                      password="password",
+                      secret="secret") as caller_lookup:
 
-        result = caller_lookup.search("0202-456-1111", int_dial_code="1")
+        result = caller_lookup.search(number="0202-456-1111", region_dial_code="1")
         print(str(result))
 
 Output:
