@@ -6,8 +6,7 @@ python:
 - 3.5
 - 3.6
 before_install:
-- openssl aes-256-cbc -K $encrypted_8b67e2a67e3b_key -iv $encrypted_8b67e2a67e3b_iv
-  -in TestVariables.json.enc -out TestVariables.json -d
+- openssl aes-256-cbc -K $encrypted_8b67e2a67e3b_key -iv $encrypted_8b67e2a67e3b_iv -in TestVariables.json.enc -out TestVariables.json -d
 install:
 - pip install -r REQUIREMENTS.txt
 - python setup.py install
