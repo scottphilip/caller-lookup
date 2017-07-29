@@ -46,7 +46,12 @@ class __CallerLookupReportManager(object):
     }
 
     def __init__(self, **kwargs):
-        self.config = kwargs.pop("config", CallerLookupConfiguration(**kwargs))
+        for key in kwargs:
+            if key.upper() == CallerLookupConfigStrings.CONFIG:
+                self.config = kwargs.pop(key)
+                break
+        if self.config is None:
+            self.config = CallerLookupConfiguration(**kwargs)
         self.connection = sqlite3.connect(join(self.config.data_dir, self.db_file_name))
         for table_name in self.tables:
             self.connection.execute("CREATE TABLE IF NOT EXISTS {0} ({1})"

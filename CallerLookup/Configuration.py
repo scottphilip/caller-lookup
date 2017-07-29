@@ -7,11 +7,10 @@ from os.path import join, isdir, isfile
 from os import makedirs
 from appdirs import AppDirs
 from datetime import datetime, timedelta
-from configparser import ConfigParser
+from configparser import RawConfigParser
 from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys, CallerLookupReportMode
 from CallerLookup.Utils.Logs import *
 from CallerLookup.Utils.Crypto import encrypt, decrypt
-
 
 def __get_value(str_value):
     if str_value is None:
@@ -198,7 +197,8 @@ def _init_logger(self, **kwargs):
 
 def _init_config_runtime(self, **kwargs):
     is_updated = False
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     for runtime_setting_name in self.runtime:
         self.runtime[runtime_setting_name] = _pop_entry(runtime_setting_name,
@@ -223,7 +223,8 @@ def _init_config_runtime(self, **kwargs):
 
 
 def _init_config(self, **kwargs):
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     self.account = _find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
     self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] \
@@ -266,7 +267,8 @@ def _save(self):
     self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] = self.account \
         if not self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] else \
         self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT]
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     for section_name in self.settings:
         if section_name not in config_file:
