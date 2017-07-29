@@ -1,5 +1,5 @@
 /.Ignore/
 /.idea/
-/build/
-/dist/
-CallerLookup/__pycache__/
+.eggs/
+TestVariables.json
+CallerLookup.egg-info/

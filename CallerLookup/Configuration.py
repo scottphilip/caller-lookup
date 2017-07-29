@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.1 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -8,9 +8,9 @@ from os import makedirs
 from appdirs import AppDirs
 from datetime import datetime, timedelta
 from configparser import ConfigParser
-from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys
+from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys, CallerLookupReportMode
 from CallerLookup.Utils.Logs import *
-from CallerLookup.Utils.Crypto import *
+from CallerLookup.Utils.Crypto import encrypt, decrypt
 
 
 def __get_value(str_value):
@@ -30,7 +30,7 @@ def __get_value(str_value):
     return str_value
 
 
-def __find_entry(key, items):
+def _find_entry(key, items):
     for item in items:
         if item.upper() == key.upper():
             return items[item]
@@ -62,6 +62,16 @@ _GENERAL_TEMPLATE = {
     CallerLookupConfigStrings.PHANTOMJS_PATH: "phantomjs",
     CallerLookupConfigStrings.IS_CACHE_ENABLED: True,
     CallerLookupConfigStrings.IS_DEBUG: False,
+    CallerLookupConfigStrings.SMTP_SERVER: "localhost",
+}
+
+_REPORT_TEMPLATE = {
+    CallerLookupConfigStrings.IS_REPORT_ENABLED: False,
+    CallerLookupConfigStrings.REPORT_EMAIL_FROM: "noreply@domain.com",
+    CallerLookupConfigStrings.REPORT_RECIPIENTS: "",
+    CallerLookupConfigStrings.LAST_UTC: "2000-01-01 00:00:00",
+    CallerLookupConfigStrings.NEXT_UTC: "2000-01-01 00:00:00",
+    CallerLookupConfigStrings.SEND_MODE: CallerLookupReportMode.EVERY_DAY
 }
 
 _ACCOUNT_TEMPLATE = {
@@ -74,7 +84,8 @@ _ACCOUNT_TEMPLATE = {
 
 _TEMPLATE = {
     CallerLookupConfigStrings.DEFAULT: _DEFAULT_TEMPLATE,
-    CallerLookupConfigStrings.GENERAL: _GENERAL_TEMPLATE
+    CallerLookupConfigStrings.GENERAL: _GENERAL_TEMPLATE,
+    CallerLookupConfigStrings.REPORT: _REPORT_TEMPLATE
 }
 
 _RUNTIME = {
@@ -171,8 +182,9 @@ def _is_debug(config):
     return config.settings[CallerLookupConfigStrings.GENERAL][CallerLookupConfigStrings.IS_DEBUG]
 
 
-def _init_logger(self):
-    if self.logger is None:
+def _init_logger(self, **kwargs):
+    arg_is_debug = _find_entry(CallerLookupConfigStrings.IS_DEBUG, kwargs)
+    if self.logger is None and arg_is_debug == True:
         from logging import getLogger, DEBUG, FileHandler, Formatter
         file_handler = FileHandler(join(str(self.log_dir), "CallerLookup.log"))
         file_handler.setFormatter(Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"))
@@ -210,7 +222,7 @@ def _init_config_runtime(self, **kwargs):
 def _init_config(self, **kwargs):
     config_file = ConfigParser()
     config_file.read(__get_config_file_path(self))
-    self.account = __find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
+    self.account = _find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
     self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] \
         if self.account is None else self.account
     if not self.account:
@@ -288,7 +300,7 @@ class CallerLookupConfiguration(object):
                    config_dir=_pop_entry(CallerLookupConfigStrings.CONFIG_DIR, None, **kwargs),
                    data_dir=_pop_entry(CallerLookupConfigStrings.DATA_DIR, None, **kwargs),
                    log_dir=_pop_entry(CallerLookupConfigStrings.LOG_DIR, None, **kwargs))
-        _init_logger(self)
+        _init_logger(self, **kwargs)
         _init_config_runtime(self, **kwargs)
         _init_config(self, **kwargs)
 

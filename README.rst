@@ -1,4 +1,5 @@
-|BuildStatus|
+.. |BuildStatus| image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
+   :target: https://travis-ci.org/scottphilip/caller-lookup
 
 Caller Lookup
 =============
@@ -48,17 +49,22 @@ Output:
 Dependencies
 ------------
 
--  Google Token
+PyPI Packages:
 
-   -  Github https://github.com/scottphilip/GoogleToken
+    -  GoogleToken
+    -  phonenumbers
+    -  cryptography
+    -  appdirs
+    -  requests
+    -  python-dateutil
 
-   -  PyPI https://pypi.python.org/pypi/GoogleToken
+Testing
+-------
 
--  phonenumbers
+Tested on Python:
 
-   -  Github https://github.com/daviddrysdale/python-phonenumbers
-
-   -  PyPI https://pypi.python.org/pypi/phonenumbers
+    - 2.7
+    - 3.6
 
 Credits
 -------
@@ -73,6 +79,3 @@ Licence
 GNU General Public License (Version 3, 29 June 2007)
 
 CallerLookup Copyright © 2017 Scott Philip
-
-.. |BuildStatus| image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
-:target: https://travis-ci.org/scottphilip/caller-lookup

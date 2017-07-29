@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.1 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -14,6 +14,13 @@ class CallerLookupHttp(object):
     def __init__(self, config):
         self.config = config
         self.session = requests.Session()
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.session is not None:
+            self.session.close()
 
     def get(self, url, headers):
         response = self.session.get(url, headers=headers)
