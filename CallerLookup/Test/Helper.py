@@ -72,6 +72,7 @@ def get_config():
     is_debug = False
     if "IS_DEBUG" in os.environ:
         is_debug = bool(str(os.environ["IS_DEBUG"]))
+    print("TEST_DEBUG=" + str(is_debug))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
     root_dir_path = os.path.join(AppDirs().user_data_dir,
