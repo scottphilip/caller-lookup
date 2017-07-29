@@ -74,6 +74,7 @@ def get_config():
                                  "CallerLookup",
                                  "TestData",
                                  str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")))[:-5]
+    print("TEST_ROOT_DIR=" + root_dir_path)
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
@@ -90,8 +91,10 @@ def get_config():
                                "{0}.ini".format(CallerLookupKeys.APP_NAME))
     with open(config_path, "w") as file:
         file.write(str(test_data["config"]))
+    print("CONFIG=" + str(test_data["config"]))
     with open(cookies_path, "w") as file:
         file.write(json.dumps(test_data["cookies"]))
+    print("COOKIES=({0})".format(", ".join(test_data["cookies"])))
     config = CallerLookupConfiguration(account_email=account_email,
                                        config_dir=config_dir,
                                        data_dir=data_dir,
