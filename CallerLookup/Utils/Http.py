@@ -27,9 +27,11 @@ class CallerLookupHttp(object):
         if self.config.is_debug():
             log_debug(self.config,
                       {
-                          "REQUEST": {"URL": url, "HEADERS": str(headers)},
+                          "REQUEST": {"URL": url,
+                                      "HEADERS": str(headers).encode(encoding="UTF-8", errors="IGNORE")},
                           "RESPONSE": {"STATUS_CODE": response.status_code,
-                                       "HEADERS": str(response.headers), "DATA": response.text}
+                                       "HEADERS": str(response.headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                       "DATA": response.text.encode(encoding="UTF-8", errors="IGNORE")}
                       })
         return response.status_code, response.headers, response.text
 
@@ -43,8 +45,11 @@ class CallerLookupHttp(object):
         if self.config.is_debug():
             log_debug(self.config,
                       {
-                          "REQUEST": {"URL": url, "HEADERS": str(headers), "DATA": encoded_data},
+                          "REQUEST": {"URL": url,
+                                      "HEADERS": str(headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                      "DATA": str(encoded_data).encode(encoding="UTF-8", errors="IGNORE")},
                           "RESPONSE": {"STATUS_CODE": response.status_code,
-                                       "HEADERS": str(response.headers), "DATA": response.text}
+                                       "HEADERS": str(response.headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                       "DATA": response.text.encode(encoding="UTF-8", errors="IGNORE")}
                       })
         return response.status_code, response.headers, response.text

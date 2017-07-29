@@ -120,6 +120,13 @@ def __get_logger(is_console=False):
         logger.addHandler(stream_handler)
 
 
+def close_logger(logger):
+    handlers = logger.handlers[:]
+    for handler in handlers:
+        handler.close()
+        logger.removeHandler(handler)
+
+
 def __get_test_var_data():
     root_path = os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
     test_var_json_path = os.path.join(root_path, FILENAME_TESTVARS)

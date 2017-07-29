@@ -14,6 +14,7 @@ class TestMain(unittest.TestCase):
 
     def tearDown(self):
         from shutil import rmtree
+        close_logger(self.config.logger)
         if self.config.is_debug():
             path = os.path.join(str(self.config.log_dir), "CallerLookup.log")
             if os.path.isfile(path):
@@ -25,7 +26,7 @@ class TestMain(unittest.TestCase):
             try:
                 rmtree(self.config.test_root_folder)
             except:
-                sleep(500)
+                sleep(0.5)
 
     def validate_result(self, expected, actual):
         for key in expected[EXPECTED]:
