@@ -45,9 +45,12 @@ def _pop_entry(key, default, **kwargs):
     return default
 
 
-def __make_dir(path):
+def __make_dir(config, path):
     if not isdir(str(path)):
-        makedirs(str(path))
+        try:
+            makedirs(str(path))
+        except Exception as ex:
+            log_error(config, "MAKE_DIR_ERROR", str(ex))
 
 
 def __get_config_file_path(self):
@@ -254,9 +257,9 @@ def _init_dirs(self, config_dir, data_dir, log_dir):
                            CallerLookupKeys.APP_NAME) if config_dir is None else config_dir
     self.data_dir = join(d.site_data_dir, CallerLookupKeys.APP_NAME) if data_dir is None else data_dir
     self.log_dir = join(d.user_log_dir, CallerLookupKeys.APP_NAME) if log_dir is None else log_dir
-    __make_dir(self.config_dir)
-    __make_dir(self.data_dir)
-    __make_dir(self.log_dir)
+    __make_dir(self, self.config_dir)
+    __make_dir(self, self.data_dir)
+    __make_dir(self, self.log_dir)
 
 
 def _save(self):

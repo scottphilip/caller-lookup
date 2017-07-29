@@ -73,13 +73,16 @@ def get_config():
     root_dir_path = os.path.join(AppDirs().user_data_dir,
                                  "CallerLookup",
                                  "TestData",
-                                 str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S")))
+                                 str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")))[:-5]
     config_dir = os.path.join(root_dir_path, "Config")
-    os.makedirs(config_dir)
+    if not os.path.isdir(config_dir):
+        os.makedirs(config_dir)
     data_dir = os.path.join(root_dir_path, "Data")
-    os.makedirs(data_dir)
+    if not os.path.isdir(data_dir):
+        os.makedirs(data_dir)
     log_dir = os.path.join(root_dir_path, "Log")
-    os.makedirs(log_dir)
+    if not os.path.isdir(log_dir):
+        os.makedirs(log_dir)
     cookies_path = os.path.join(data_dir,
                                 "{0}.{1}".format(account_email.upper(),
                                                  CallerLookupKeys.COOKIE_FILE_EXT))
