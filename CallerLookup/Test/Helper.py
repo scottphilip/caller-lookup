@@ -104,7 +104,7 @@ def get_config():
                                        config_dir=config_dir,
                                        data_dir=data_dir,
                                        log_dir=log_dir,
-                                       logger=__get_logger(),
+                                       #logger=__get_logger(),
                                        is_debug=is_debug)
     config.test_root_folder = root_dir_path
     return config
