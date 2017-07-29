@@ -14,6 +14,9 @@ install:
 script:
 - python setup.py test
 - python setup.py check --strict --restructuredtext
+env:
+  global:
+  - IS_DEBUG=True
 deploy:
   provider: pypi
   user: scottphilip

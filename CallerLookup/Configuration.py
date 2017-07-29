@@ -227,8 +227,9 @@ def _init_config(self, **kwargs):
     config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     self.account = _find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
-    self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] \
-        if self.account is None else self.account
+    if self.account is None and CallerLookupConfigStrings.DEFAULT in config_file:
+        if CallerLookupConfigStrings.ACCOUNT in config_file[CallerLookupConfigStrings.DEFAULT]:
+            self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT]
     if not self.account:
         raise Exception("Unable to determine account")
     self.account = self.account.upper()

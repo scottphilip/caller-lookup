@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 from datetime import datetime
 from appdirs import AppDirs
@@ -68,6 +69,9 @@ FILENAME_TESTVARS = "TestVariables.json"
 
 
 def get_config():
+    is_debug = False
+    if "IS_DEBUG" in os.environ:
+        is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
     root_dir_path = os.path.join(AppDirs().user_data_dir,
@@ -99,7 +103,8 @@ def get_config():
                                        config_dir=config_dir,
                                        data_dir=data_dir,
                                        log_dir=log_dir,
-                                       logger=__get_logger())
+                                       logger=__get_logger(),
+                                       is_debug=is_debug)
     config.test_root_folder = root_dir_path
     return config
 

@@ -1,5 +1,8 @@
 import unittest
 from time import sleep
+
+import os.path
+
 from CallerLookup.Test.Helper import *
 from CallerLookup.Main import lookup_number
 
@@ -11,6 +14,11 @@ class TestMain(unittest.TestCase):
 
     def tearDown(self):
         from shutil import rmtree
+        if self.config.is_debug():
+            path = os.path.join(str(self.config.log_dir), "CallerLookup.log")
+            if os.path.isfile(path):
+                with open(path) as file:
+                    print(file.read())
         start_time = datetime.utcnow()
         while os.path.isdir(self.config.test_root_folder) \
                 and ((datetime.utcnow() - start_time).total_seconds() <= 10):

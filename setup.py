@@ -1,10 +1,11 @@
 import os
-from setuptools import setup
+from distutils.core import setup
 
 
 def read(name):
     with open(os.path.join(os.path.dirname(__file__), name)) as f:
         return f.read()
+
 
 setup(
     name='CallerLookup',
