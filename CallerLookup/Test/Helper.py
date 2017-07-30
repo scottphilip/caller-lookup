@@ -78,7 +78,7 @@ def get_config():
     root_dir_path = "/home/travis/build/scottphilip/caller-lookup/"
     root_dir_path = os.path.join(root_dir_path,
                                  ".TestData",
-                                 str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")))[:-5]
+                                 datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")[:-5])
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
