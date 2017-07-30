@@ -34,8 +34,8 @@ def __get_system_key(account):
     return urlsafe_b64encode(digest.finalize())
 
 
-def __get_key(account):
-    key_dir = join(AppDirs().site_data_dir, PRIVATE_KEY_DIR_NAME)
+def __get_key(account, data_dir):
+    key_dir = join((AppDirs().site_data_dir if data_dir is None else data_dir), PRIVATE_KEY_DIR_NAME)
     h = hashlib.new("ripemd160")
     if sys.version_info[0] >= 3:
         account = bytes(account, CallerLookupKeys.UTF8)
@@ -69,7 +69,7 @@ def __get_key(account):
             raise Exception(INVALID_DECRYPTION_KEY, inner_ex)
 
 
-def encrypt(account, plain_text):
+def encrypt(account, plain_text, data_dir=None):
     if not plain_text:
         return ""
     from cryptography.fernet import Fernet
@@ -77,17 +77,17 @@ def encrypt(account, plain_text):
         bytes_text = bytes(plain_text, encoding="ascii")
     else:
         bytes_text = bytes(plain_text)
-    cipher_suite = Fernet(key=__get_key(account))
+    cipher_suite = Fernet(key=__get_key(account, data_dir))
     token = cipher_suite.encrypt(bytes_text)
     return b64encode(token).decode(CallerLookupKeys.UTF8)
 
 
-def decrypt(account, encrypted_text):
+def decrypt(account, encrypted_text, data_dir=None):
     if not encrypted_text:
         return ""
     if sys.version_info[0] >= 3:
         data = b64decode(bytes(encrypted_text, encoding=CallerLookupKeys.UTF8))
     else:
         data = b64decode(bytes(encrypted_text))
-    cipher_suite = Fernet(key=__get_key(account))
+    cipher_suite = Fernet(key=__get_key(account, data_dir))
     return cipher_suite.decrypt(data).decode(CallerLookupKeys.UTF8)

@@ -185,7 +185,7 @@ def _is_debug(config):
 
 def _init_logger(self, **kwargs):
     arg_is_debug = _find_entry(CallerLookupConfigStrings.IS_DEBUG, kwargs)
-    if self.logger is None and arg_is_debug == True:
+    if self.logger is None and arg_is_debug is True:
         from logging import getLogger, DEBUG, FileHandler, Formatter
         file_handler = FileHandler(join(str(self.log_dir), "CallerLookup.log"))
         file_handler.setFormatter(Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"))
@@ -240,7 +240,7 @@ def _init_config(self, **kwargs):
                 if setting_name in config_file[section_name]:
                     value = config_file[section_name][setting_name]
                     if setting_name in __ENCRYPT:
-                        value = decrypt(section_name, value)
+                        value = decrypt(section_name, value, self.data_dir)
                     self.settings[section_name][setting_name] = __get_value(value)
     for key in kwargs.keys():
         if key.upper() in _DEFAULT_TEMPLATE:
@@ -277,7 +277,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(section_name, value)
+                    value = encrypt(section_name, value, self.data_dir)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)

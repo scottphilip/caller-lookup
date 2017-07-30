@@ -16,7 +16,7 @@ class TestMain(unittest.TestCase):
         from shutil import rmtree
         close_logger(self.config.logger)
         if self.config.is_debug():
-            path = os.path.join(str(self.config.log_dir), "CallerLookup.log")
+            path = os.path.join(self.config.log_dir, "CallerLookup.log")
             if os.path.isfile(path):
                 with open(path) as file:
                     print(file.read())
