@@ -72,14 +72,13 @@ def get_config():
     is_debug = False
     if "IS_DEBUG" in os.environ:
         is_debug = bool(str(os.environ["IS_DEBUG"]))
-    print("TEST_DEBUG=" + str(is_debug))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    root_dir_path = os.path.join(AppDirs().user_data_dir,
-                                 "CallerLookup",
-                                 "TestData",
+    from os.path import dirname, realpath
+    root_dir_path = str(os.environ["root_dir_path"]) if "root_dir_path" in os.environ else dirname(dirname(dirname(realpath(__file__))))
+    root_dir_path = os.path.join(root_dir_path,
+                                 ".TestData",
                                  str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")))[:-5]
-    print("TEST_ROOT_DIR=" + root_dir_path)
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
@@ -92,19 +91,12 @@ def get_config():
     cookies_path = os.path.join(data_dir,
                                 "{0}.{1}".format(account_email.upper(),
                                                  CallerLookupKeys.COOKIE_FILE_EXT))
-    config_path = os.path.join(config_dir,
-                               "{0}.ini".format(CallerLookupKeys.APP_NAME))
-    with open(config_path, "w") as file:
-        file.write(str(test_data["config"]))
-    print("CONFIG=" + str(test_data["config"]))
     with open(cookies_path, "w") as file:
         file.write(json.dumps(test_data["cookies"]))
-    print("COOKIES=({0})".format(", ".join(test_data["cookies"])))
-    config = CallerLookupConfiguration(account_email=account_email,
+    config = CallerLookupConfiguration(username=account_email,
                                        config_dir=config_dir,
                                        data_dir=data_dir,
                                        log_dir=log_dir,
-                                       #logger=__get_logger(),
                                        is_debug=is_debug)
     config.test_root_folder = root_dir_path
     return config

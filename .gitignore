@@ -3,3 +3,4 @@
 .eggs/
 TestVariables.json
 CallerLookup.egg-info/
+/.TestData/
