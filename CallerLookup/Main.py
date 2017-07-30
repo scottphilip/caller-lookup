@@ -1,15 +1,16 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.2 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
 from CallerLookup.Responses import *
 from CallerLookup.Search import *
+from CallerLookup.Utils.Report import record
 from CallerLookup.Strings import CallerLookupLabel, CallerLookupConfigStrings
 from CallerLookup.Configuration import CallerLookupConfiguration, extract_values
 from CallerLookup.Utils.PhoneNumbers import format_number
 from datetime import datetime
-
+from sys import exc_info
 
 # noinspection PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,
 # PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,
@@ -56,9 +57,15 @@ class CallerLookup(object):
     """
     Caller Lookup - Reverse Caller Id
     """
+    config = None
 
     def __init__(self, **kwargs):
-        self.config = CallerLookupConfiguration(**kwargs)
+        for key in kwargs:
+            if key.upper() == CallerLookupConfigStrings.CONFIG:
+                self.config = kwargs.pop(key)
+                break
+        if self.config is None:
+            self.config = CallerLookupConfiguration(**kwargs)
 
     def __enter__(self):
         return self
@@ -67,47 +74,35 @@ class CallerLookup(object):
         self.config.save()
 
     def search(self, number, region=None, region_dial_code=None):
-        """
-        :param number:
-        :param region:
-        :param region_dial_code:
-        :return:
-        """
-
-        log_debug(self.config, "Search", {"number": number, "region": region, "int_dial_code": region_dial_code})
         start_time = datetime.utcnow()
+        response = self._do_search(number, region, region_dial_code)
+        elapsed_seconds = (datetime.utcnow() - start_time).total_seconds()
+        if self.config.is_debug():
+            response[CallerLookupLabel.TIME_TAKEN] = elapsed_seconds
+        record(self.config, number, region, region_dial_code, response, elapsed_seconds)
+        return response
 
+    def _do_search(self, number, region=None, region_dial_code=None):
+        log_debug(self.config, "Search", {"number": number, "region": region, "int_dial_code": region_dial_code})
         try:
-
             cached = get_cached_response(self.config, phone_number=number)
             if cached is not None:
-                elapsed = (datetime.utcnow() - start_time).total_seconds()
-                if self.config.is_debug():
-                    cached[CallerLookupLabel.TIME_TAKEN] = elapsed
                 return cached
-
-            number_data = format_number(number,
+            number_data = format_number(self.config,
+                                        number,
                                         trunk_int_dial_code=region_dial_code,
                                         trunk_country_code=region)
-
             if not number_data[CallerLookupLabel.IS_VALID]:
                 return get_response_invalid(number, region)
-
             data = run_search(self.config, number_data)
             result = get_response_success(number_data, data)
             set_cached_response(self.config, number, result)
-
-            if self.config.is_debug():
-                elapsed = datetime.utcnow() - start_time
-                result[CallerLookupLabel.TIME_TAKEN] = elapsed.total_seconds()
             return result
-
-        except Exception as e:
-
+        except:
             import traceback
+            e = exc_info()[0]
             stack = traceback.format_exc()
             log_error(self.config, "SEARCH_ERROR",
                       {"Exception": str(e),
                        "Stack": stack})
-            response = get_response_error(str(e), stack if self.config.is_debug() else None)
-            return response
+            return get_response_error(str(e), stack if self.config.is_debug() else None)

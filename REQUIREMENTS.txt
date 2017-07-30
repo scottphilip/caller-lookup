@@ -3,3 +3,6 @@ appdirs
 requests
 GoogleToken
 phonenumbers
+python-dateutil
+docutils
+configparser

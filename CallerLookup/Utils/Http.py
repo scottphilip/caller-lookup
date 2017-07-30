@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.2 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -15,14 +15,23 @@ class CallerLookupHttp(object):
         self.config = config
         self.session = requests.Session()
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if self.session is not None:
+            self.session.close()
+
     def get(self, url, headers):
         response = self.session.get(url, headers=headers)
         if self.config.is_debug():
             log_debug(self.config,
                       {
-                          "REQUEST": {"URL": url, "HEADERS": str(headers)},
+                          "REQUEST": {"URL": url,
+                                      "HEADERS": str(headers).encode(encoding="UTF-8", errors="IGNORE")},
                           "RESPONSE": {"STATUS_CODE": response.status_code,
-                                       "HEADERS": str(response.headers), "DATA": response.text}
+                                       "HEADERS": str(response.headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                       "DATA": response.text.encode(encoding="UTF-8", errors="IGNORE")}
                       })
         return response.status_code, response.headers, response.text
 
@@ -36,8 +45,11 @@ class CallerLookupHttp(object):
         if self.config.is_debug():
             log_debug(self.config,
                       {
-                          "REQUEST": {"URL": url, "HEADERS": str(headers), "DATA": encoded_data},
+                          "REQUEST": {"URL": url,
+                                      "HEADERS": str(headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                      "DATA": str(encoded_data).encode(encoding="UTF-8", errors="IGNORE")},
                           "RESPONSE": {"STATUS_CODE": response.status_code,
-                                       "HEADERS": str(response.headers), "DATA": response.text}
+                                       "HEADERS": str(response.headers).encode(encoding="UTF-8", errors="IGNORE"),
+                                       "DATA": response.text.encode(encoding="UTF-8", errors="IGNORE")}
                       })
         return response.status_code, response.headers, response.text

@@ -1,10 +1,11 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.2 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
 
 class CallerLookupConfigStrings:
+    CONFIG = "CONFIG"
     NUMBER = "NUMBER"
     REGION = "REGION"
     REGION_DIAL_CODE = "REGION_DIAL_CODE"
@@ -14,6 +15,7 @@ class CallerLookupConfigStrings:
     PHANTOMJS_PATH = "PHANTOMJS_PATH"
     IS_CACHE_ENABLED = "IS_CACHE_ENABLED"
     IS_DEBUG = "IS_DEBUG"
+    SMTP_SERVER = "SMTP_SERVER"
     ACCESS_TOKEN = "ACCESS_TOKEN"
     ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY"
     USERNAME = "USERNAME"
@@ -25,6 +27,20 @@ class CallerLookupConfigStrings:
     CONFIG_DIR = "CONFIG_DIR"
     DATA_DIR = "DATA_DIR"
     LOG_DIR = "LOG_DIR"
+    REPORT = "REPORT"
+    IS_REPORT_ENABLED = "IS_REPORT_ENABLED"
+    REPORT_RECIPIENTS = "REPORT_RECIPIENTS"
+    REPORT_EMAIL_FROM = "REPORT_EMAIL_FROM"
+    LAST_UTC = "LAST_UTC"
+    NEXT_UTC = "NEXT_UTC"
+    SEND_MODE = "SEND_MODE"
+
+
+class CallerLookupReportMode:
+    EVERY_DAY = "EVERY_DAY"
+    EVERY_WEEKDAY = "EVERY_WEEKDAY"
+    WEEKLY = "WEEKLY"
+    MONTHLY = "MONTHLY"
 
 
 class CallerLookupLabel:
@@ -47,8 +63,6 @@ class CallerLookupLabel:
     INVALID_NUMBER = "INVALID_NUMBER"
     ERROR = "ERROR"
     UNKNOWN = "UNKNOWN"
-    # ACCESS_TOKEN = "ACCESS_TOKEN"
-    # ACCESS_TOKEN_EXPIRY = "ACCESS_TOKEN_EXPIRY"
 
 
 class CallerLookupErrors:
@@ -90,6 +104,8 @@ class CallerLookupKeys(object):
     HTTP_HEADER_REFERER = "referer"
     HTTP_HEADER_ORIGIN = "origin"
     DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
+    COOKIE_FILE_EXT = "cke"
+    PHANTOM_JS_LOG_FILE_NAME = "phantom-js.log"
 
 
 class CallerLookupArgParserHelp:

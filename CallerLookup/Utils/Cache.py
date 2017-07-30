@@ -1,12 +1,12 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.2 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 from json import dumps, loads
 from os.path import join, isfile
 
 
-def get_cached_response(config, phone_number):
+def get_cached_response(config, phone_number, region=None, region_dial_code=None):
     if not config.is_cache_enabled():
         return None
     import re
@@ -20,7 +20,7 @@ def get_cached_response(config, phone_number):
     return None
 
 
-def set_cached_response(config, phone_number, data):
+def set_cached_response(config, phone_number, data, region=None, region_dial_code=None):
     if not config.is_cache_enabled():
         return
     import re

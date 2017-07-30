@@ -1,5 +1,5 @@
 # Author:       Scott Philip (sp@scottphilip.com)
-# Version:      1.2 (20 July 2017)
+# Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
@@ -7,11 +7,10 @@ from os.path import join, isdir, isfile
 from os import makedirs
 from appdirs import AppDirs
 from datetime import datetime, timedelta
-from configparser import ConfigParser
-from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys
+from configparser import RawConfigParser
+from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys, CallerLookupReportMode
 from CallerLookup.Utils.Logs import *
-from CallerLookup.Utils.Crypto import *
-
+from CallerLookup.Utils.Crypto import encrypt, decrypt
 
 def __get_value(str_value):
     if str_value is None:
@@ -30,7 +29,7 @@ def __get_value(str_value):
     return str_value
 
 
-def __find_entry(key, items):
+def _find_entry(key, items):
     for item in items:
         if item.upper() == key.upper():
             return items[item]
@@ -40,14 +39,16 @@ def __find_entry(key, items):
 def _pop_entry(key, default, **kwargs):
     for a in kwargs:
         if key.upper() == a.upper():
-            result = kwargs.pop(a)
-            return result.upper() if hasattr(result, "upper") else result
+            return kwargs.pop(a)
     return default
 
 
-def __make_dir(path):
+def __make_dir(config, path):
     if not isdir(str(path)):
-        makedirs(str(path))
+        try:
+            makedirs(str(path))
+        except Exception as ex:
+            log_error(config, "MAKE_DIR_ERROR", str(ex))
 
 
 def __get_config_file_path(self):
@@ -62,6 +63,16 @@ _GENERAL_TEMPLATE = {
     CallerLookupConfigStrings.PHANTOMJS_PATH: "phantomjs",
     CallerLookupConfigStrings.IS_CACHE_ENABLED: True,
     CallerLookupConfigStrings.IS_DEBUG: False,
+    CallerLookupConfigStrings.SMTP_SERVER: "localhost",
+}
+
+_REPORT_TEMPLATE = {
+    CallerLookupConfigStrings.IS_REPORT_ENABLED: False,
+    CallerLookupConfigStrings.REPORT_EMAIL_FROM: "noreply@domain.com",
+    CallerLookupConfigStrings.REPORT_RECIPIENTS: "",
+    CallerLookupConfigStrings.LAST_UTC: "2000-01-01 00:00:00",
+    CallerLookupConfigStrings.NEXT_UTC: "2000-01-01 00:00:00",
+    CallerLookupConfigStrings.SEND_MODE: CallerLookupReportMode.EVERY_DAY
 }
 
 _ACCOUNT_TEMPLATE = {
@@ -74,7 +85,8 @@ _ACCOUNT_TEMPLATE = {
 
 _TEMPLATE = {
     CallerLookupConfigStrings.DEFAULT: _DEFAULT_TEMPLATE,
-    CallerLookupConfigStrings.GENERAL: _GENERAL_TEMPLATE
+    CallerLookupConfigStrings.GENERAL: _GENERAL_TEMPLATE,
+    CallerLookupConfigStrings.REPORT: _REPORT_TEMPLATE
 }
 
 _RUNTIME = {
@@ -171,8 +183,9 @@ def _is_debug(config):
     return config.settings[CallerLookupConfigStrings.GENERAL][CallerLookupConfigStrings.IS_DEBUG]
 
 
-def _init_logger(self):
-    if self.logger is None:
+def _init_logger(self, **kwargs):
+    arg_is_debug = _find_entry(CallerLookupConfigStrings.IS_DEBUG, kwargs)
+    if self.logger is None and arg_is_debug is True:
         from logging import getLogger, DEBUG, FileHandler, Formatter
         file_handler = FileHandler(join(str(self.log_dir), "CallerLookup.log"))
         file_handler.setFormatter(Formatter("%(asctime)s [%(threadName)-12.12s] [%(levelname)-5.5s]  %(message)s"))
@@ -183,7 +196,8 @@ def _init_logger(self):
 
 def _init_config_runtime(self, **kwargs):
     is_updated = False
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     for runtime_setting_name in self.runtime:
         self.runtime[runtime_setting_name] = _pop_entry(runtime_setting_name,
@@ -208,11 +222,13 @@ def _init_config_runtime(self, **kwargs):
 
 
 def _init_config(self, **kwargs):
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
-    self.account = __find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
-    self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] \
-        if self.account is None else self.account
+    self.account = _find_entry(CallerLookupConfigStrings.USERNAME, kwargs)
+    if self.account is None and CallerLookupConfigStrings.DEFAULT in config_file:
+        if CallerLookupConfigStrings.ACCOUNT in config_file[CallerLookupConfigStrings.DEFAULT]:
+            self.account = config_file[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT]
     if not self.account:
         raise Exception("Unable to determine account")
     self.account = self.account.upper()
@@ -224,7 +240,7 @@ def _init_config(self, **kwargs):
                 if setting_name in config_file[section_name]:
                     value = config_file[section_name][setting_name]
                     if setting_name in __ENCRYPT:
-                        value = decrypt(section_name, value)
+                        value = decrypt(section_name, value, self.data_dir)
                     self.settings[section_name][setting_name] = __get_value(value)
     for key in kwargs.keys():
         if key.upper() in _DEFAULT_TEMPLATE:
@@ -242,16 +258,17 @@ def _init_dirs(self, config_dir, data_dir, log_dir):
                            CallerLookupKeys.APP_NAME) if config_dir is None else config_dir
     self.data_dir = join(d.site_data_dir, CallerLookupKeys.APP_NAME) if data_dir is None else data_dir
     self.log_dir = join(d.user_log_dir, CallerLookupKeys.APP_NAME) if log_dir is None else log_dir
-    __make_dir(self.config_dir)
-    __make_dir(self.data_dir)
-    __make_dir(self.log_dir)
+    __make_dir(self, self.config_dir)
+    __make_dir(self, self.data_dir)
+    __make_dir(self, self.log_dir)
 
 
 def _save(self):
     self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] = self.account \
         if not self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT] else \
         self.settings[CallerLookupConfigStrings.DEFAULT][CallerLookupConfigStrings.ACCOUNT]
-    config_file = ConfigParser()
+    config_file = RawConfigParser()
+    config_file.optionxform = str
     config_file.read(__get_config_file_path(self))
     for section_name in self.settings:
         if section_name not in config_file:
@@ -260,7 +277,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(section_name, value)
+                    value = encrypt(section_name, value, self.data_dir)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)
@@ -288,7 +305,7 @@ class CallerLookupConfiguration(object):
                    config_dir=_pop_entry(CallerLookupConfigStrings.CONFIG_DIR, None, **kwargs),
                    data_dir=_pop_entry(CallerLookupConfigStrings.DATA_DIR, None, **kwargs),
                    log_dir=_pop_entry(CallerLookupConfigStrings.LOG_DIR, None, **kwargs))
-        _init_logger(self)
+        _init_logger(self, **kwargs)
         _init_config_runtime(self, **kwargs)
         _init_config(self, **kwargs)
 
