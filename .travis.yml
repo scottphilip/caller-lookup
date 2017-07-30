@@ -10,6 +10,7 @@ before_install:
   -in TestVariables.json.enc -out TestVariables.json -d
 install:
 - pip install -r REQUIREMENTS.txt
+- pip install Pygments
 - python setup.py install
 script:
 - python setup.py test
