@@ -75,10 +75,18 @@ def get_auth_token(config):
 
 
 def get_token(config):
-    account_data = config.settings[config.account]
-    token, expiry = get_google_token(account_email=account_data[CallerLookupConfigStrings.USERNAME],
-                                     account_password=account_data[CallerLookupConfigStrings.PASSWORD],
-                                     account_otp_secret=account_data[CallerLookupConfigStrings.SECRET],
+    account_data = config.settings[config.account] if config.account in config.settings else None
+    username, password, secret = config.account, "", ""
+    if account_data is not None:
+        username = account_data[CallerLookupConfigStrings.USERNAME] \
+            if CallerLookupConfigStrings.USERNAME in account_data else username
+        password = account_data[CallerLookupConfigStrings.PASSWORD] \
+            if CallerLookupConfigStrings.PASSWORD in account_data else ""
+        secret = account_data[CallerLookupConfigStrings.SECRET] \
+            if CallerLookupConfigStrings.PASSWORD in account_data else ""
+    token, expiry = get_google_token(account_email=username,
+                                     account_password=password,
+                                     account_otp_secret=secret,
                                      oauth_client_id=CallerLookupKeys.OAUTH2_CLIENT_ID,
                                      oauth_redirect_uri=CallerLookupKeys.OAUTH2_REDIRECT_URI,
                                      oauth_scope=CallerLookupKeys.OAUTH2_SCOPE,
