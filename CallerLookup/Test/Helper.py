@@ -75,7 +75,7 @@ def get_config():
     test_data = __get_test_var_data()
     account_email = test_data["username"]
     from os.path import dirname, realpath
-    root_dir_path = str(os.environ["root_dir_path"]) if "root_dir_path" in os.environ else dirname(dirname(dirname(realpath(__file__))))
+    root_dir_path = "/home/travis/build/scottphilip/caller-lookup/"
     root_dir_path = os.path.join(root_dir_path,
                                  ".TestData",
                                  str(datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")))[:-5]
