@@ -15,7 +15,7 @@ script:
 - pip install Pygments
 - pip install docutils
 - python setup.py test
-- python setup.py check --strict --restructuredtext
+- python setup.py check --restructuredtext
 env:
   global:
   - IS_DEBUG=True
