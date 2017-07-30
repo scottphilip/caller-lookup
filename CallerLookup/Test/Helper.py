@@ -74,7 +74,6 @@ def get_config():
         is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    from os.path import dirname, realpath
     root_dir_path = "/home/travis/build/scottphilip/caller-lookup/"
     root_dir_path = os.path.join(root_dir_path,
                                  ".TestData",
