@@ -39,8 +39,7 @@ def _find_entry(key, items):
 def _pop_entry(key, default, **kwargs):
     for a in kwargs:
         if key.upper() == a.upper():
-            result = kwargs.pop(a)
-            return result.upper() if hasattr(result, "upper") else result
+            return kwargs.pop(a)
     return default
 
 
