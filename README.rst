@@ -1,4 +1,4 @@
-.. |BuildStatus| image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
+.. image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
    :target: https://travis-ci.org/scottphilip/caller-lookup
 
 Caller Lookup
