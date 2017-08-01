@@ -12,13 +12,11 @@ def log_debug(config, *args, **kwargs):
 def log_info(config, *args, **kwargs):
     if config is not None and config.logger is not None:
         config.logger.info(["CALLER_LOOKUP", args], **kwargs)
-    print("INFO: ", str(args), str(kwargs))
 
 
 def log_error(config, *args, **kwargs):
     if config is not None and config.logger is not None:
         config.logger.error(["CALLER_LOOKUP", args], **kwargs)
-    print("ERROR: ", str(args), str(kwargs))
 
 
 def format_exception(ex):
