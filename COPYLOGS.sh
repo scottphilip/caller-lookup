@@ -21,12 +21,12 @@ git init .
 git config user.email "travis@travis-ci.org"
 git config user.name "Travis CI"
 
-echo "ADDING TO GIT [https://${REPO_PATH}] ..."
+echo "ADDING TO GIT... [https://${REPO_PATH}] ..."
 git clone https://${REPO_PATH}
 cd "${LOG_REPO}"
 
 echo "MOVING FILES... [${LOG_JOB_PATH} >> ${GIT_JOB_PATH}]"
-mv -v "${LOG_JOB_PATH}" "${GIT_JOB_PATH}"
+mv -v "${LOG_JOB_PATH}/*" "${GIT_JOB_PATH}"
 
 echo "ADDING FILES TO GIT... [${GIT_JOB_PATH}]"
 git add "${GIT_JOB_PATH}"
