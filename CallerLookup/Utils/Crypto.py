@@ -3,6 +3,7 @@
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 from CallerLookup.Strings import CallerLookupKeys
+from CallerLookup.Utils.Logs import *
 from cryptography.fernet import Fernet, InvalidToken
 from base64 import b64encode, b64decode, urlsafe_b64encode
 from cryptography.hazmat.primitives import hashes
@@ -53,6 +54,7 @@ def __get_key(config, account=None):
         with open(key_path, "w+") as file:
             encoded = b64encode(key)
             file.write(f.encrypt(encoded).decode(CallerLookupKeys.UTF8))
+        log_debug(config, "CRYPTO_KEY_CREATED", selected_account, key_path)
         if osname == 'nt':
             try:
                 import ctypes
