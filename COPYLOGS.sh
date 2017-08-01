@@ -12,7 +12,7 @@ MESSAGE="${!TRAVIS_COMMIT} (Job ${!TRAVIS_JOB_NUMBER})"
 cd ${BUILD_DIR}
 mkdir github
 cd github
-mkdir ${CURRENT_REPO}
+mkdir "${CURRENT_REPO}"
 cp -r ${BUILD_DIR}/${JOB_NUMBER} ${BUILD_DIR}/github/${CURRENT_REPO}/${JOB_NUMBER}
 git clone git://${REPO_PATH}
 git remote
