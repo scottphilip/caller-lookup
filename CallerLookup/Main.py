@@ -11,6 +11,8 @@ from CallerLookup.Configuration import CallerLookupConfiguration, extract_values
 from CallerLookup.Utils.PhoneNumbers import format_number
 from datetime import datetime
 from sys import exc_info
+import traceback
+
 
 # noinspection PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,
 # PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,PyIncorrectDocstring,
@@ -41,11 +43,7 @@ def lookup_number(**kwargs):
                                   CallerLookupConfigStrings.REGION_DIAL_CODE], **kwargs)
 
     with CallerLookup(**kwargs) as lookup:
-        log_debug(lookup.config, {"DATA_DIR": lookup.config.data_dir,
-                                  "LOG_DIR": lookup.config.log_dir,
-                                  "CONFIG_DIR": lookup.config.config_dir,
-                                  "SETTINGS": str(lookup.config.settings),
-                                  "RUNTIME": str(lookup.config.runtime)})
+        log_debug(lookup.config, "ARGS", str(kwargs))
         if not search_args[CallerLookupConfigStrings.NUMBER]:
             return
         return lookup.search(number=search_args[CallerLookupConfigStrings.NUMBER],
@@ -83,7 +81,7 @@ class CallerLookup(object):
         return response
 
     def _do_search(self, number, region=None, region_dial_code=None):
-        log_debug(self.config, "Search", {"number": number, "region": region, "int_dial_code": region_dial_code})
+        log_debug(self.config, "SEARCH", number, region, region_dial_code)
         try:
             cached = get_cached_response(self.config, phone_number=number)
             if cached is not None:
@@ -98,11 +96,9 @@ class CallerLookup(object):
             result = get_response_success(number_data, data)
             set_cached_response(self.config, number, result)
             return result
-        except:
-            import traceback
-            e = exc_info()[0]
+        except Exception as ex:
             stack = traceback.format_exc()
             log_error(self.config, "SEARCH_ERROR",
-                      {"Exception": str(e),
-                       "Stack": stack})
-            return get_response_error(str(e), stack if self.config.is_debug() else None)
+                      {"MESSAGE": format_exception(ex),
+                       "STACK": stack})
+            return get_response_error(ex)

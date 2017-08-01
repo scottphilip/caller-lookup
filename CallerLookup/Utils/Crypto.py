@@ -2,8 +2,6 @@
 # Version:      1.2 (25 July 2017)
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
-
-from appdirs import AppDirs
 from CallerLookup.Strings import CallerLookupKeys
 from cryptography.fernet import Fernet, InvalidToken
 from base64 import b64encode, b64decode, urlsafe_b64encode
@@ -22,9 +20,9 @@ PRIVATE_KEY_DIR_NAME = ".keys"
 
 def __get_system_key(account):
     try:
-        machine_id = socket.gethostname()
+        machine_id = socket.gethostname().upper()
     except:
-        machine_id = account
+        machine_id = account.upper()
     if sys.version_info[0] >= 3:
         machine_id = bytes(machine_id, encoding=CallerLookupKeys.UTF8)
     else:
@@ -34,16 +32,19 @@ def __get_system_key(account):
     return urlsafe_b64encode(digest.finalize())
 
 
-def __get_key(account, data_dir):
-    key_dir = join((AppDirs().site_data_dir if data_dir is None else data_dir), PRIVATE_KEY_DIR_NAME)
+def __get_key(config, account=None):
+    key_dir = join(config.data_dir, PRIVATE_KEY_DIR_NAME)
+    if not isdir(key_dir):
+        makedirs(key_dir)
     h = hashlib.new("ripemd160")
+    selected_account = account.upper() if account is not None else config.account.upper()
     if sys.version_info[0] >= 3:
-        account = bytes(account, CallerLookupKeys.UTF8)
+        account_bytes = bytes(selected_account, CallerLookupKeys.UTF8)
     else:
-        account = bytes(account)
-    h.update(account)
+        account_bytes = bytes(selected_account)
+    h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
-    f = Fernet(key=__get_system_key(account))
+    f = Fernet(key=__get_system_key(selected_account))
     if not isfile(key_path):
         if not isdir(key_dir):
             makedirs(key_dir)
@@ -69,25 +70,25 @@ def __get_key(account, data_dir):
             raise Exception(INVALID_DECRYPTION_KEY, inner_ex)
 
 
-def encrypt(account, plain_text, data_dir=None):
+def encrypt(config, plain_text, account=None):
     if not plain_text:
         return ""
     from cryptography.fernet import Fernet
     if sys.version_info[0] >= 3:
-        bytes_text = bytes(plain_text, encoding="ascii")
+        bytes_text = bytes(plain_text, encoding="utf-8")
     else:
         bytes_text = bytes(plain_text)
-    cipher_suite = Fernet(key=__get_key(account, data_dir))
+    cipher_suite = Fernet(key=__get_key(config, account))
     token = cipher_suite.encrypt(bytes_text)
     return b64encode(token).decode(CallerLookupKeys.UTF8)
 
 
-def decrypt(account, encrypted_text, data_dir=None):
+def decrypt(config, encrypted_text, account=None):
     if not encrypted_text:
         return ""
     if sys.version_info[0] >= 3:
         data = b64decode(bytes(encrypted_text, encoding=CallerLookupKeys.UTF8))
     else:
         data = b64decode(bytes(encrypted_text))
-    cipher_suite = Fernet(key=__get_key(account, data_dir))
+    cipher_suite = Fernet(key=__get_key(config, account))
     return cipher_suite.decrypt(data).decode(CallerLookupKeys.UTF8)

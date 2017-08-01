@@ -1,8 +1,6 @@
 import os
-import sys
 import json
 from datetime import datetime
-from appdirs import AppDirs
 from logging import getLogger, ERROR as LOG_ERROR, StreamHandler, Formatter, basicConfig
 from CallerLookup.Strings import CallerLookupKeys
 from CallerLookup.Configuration import CallerLookupConfiguration
@@ -74,9 +72,8 @@ def get_config():
         is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    root_dir_path = "/home/travis/build/scottphilip/caller-lookup/"
-    root_dir_path = os.path.join(root_dir_path,
-                                 ".TestData",
+    root_dir_path = os.path.join(_get_root_folder(),
+                                 ".CallerLookup_Test",
                                  datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")[:-5])
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
@@ -99,6 +96,15 @@ def get_config():
                                        is_debug=is_debug)
     config.test_root_folder = root_dir_path
     return config
+
+
+def _get_root_folder():
+    var_names = ["TRAVIS_BUILD_DIR", "TMPDIR", "TMP"]
+    for var_name in var_names:
+        if var_name in os.environ:
+            if os.access(os.environ[var_name], os.W_OK):
+                return os.environ[var_name]
+    return os.getcwd()
 
 
 def __get_logger(is_console=False):

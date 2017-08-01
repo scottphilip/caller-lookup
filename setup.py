@@ -15,7 +15,7 @@ setup(
     author='Scott Philip',
     author_email='sp@scottphilip.com',
     packages=['CallerLookup'],
-    version='1.2.2',
+    version='1.2.3',
     install_requires=read('REQUIREMENTS.txt').splitlines(),
     test_suite='nose.collector',
     tests_require=['nose'],

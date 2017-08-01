@@ -240,7 +240,7 @@ def _init_config(self, **kwargs):
                 if setting_name in config_file[section_name]:
                     value = config_file[section_name][setting_name]
                     if setting_name in __ENCRYPT:
-                        value = decrypt(section_name, value, self.data_dir)
+                        value = decrypt(self, value, section_name)
                     self.settings[section_name][setting_name] = __get_value(value)
     for key in kwargs.keys():
         if key.upper() in _DEFAULT_TEMPLATE:
@@ -277,7 +277,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(section_name, value, self.data_dir)
+                    value = encrypt(self, value, section_name)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)
