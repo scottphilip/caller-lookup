@@ -157,7 +157,10 @@ def _get_cached_token(config):
     if CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY in config.settings[config.account]:
         if datetime.strptime(config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY],
                              CallerLookupKeys.DATETIME_FMT) > datetime.utcnow():
-            return config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN]
+            if CallerLookupConfigStrings.ACCESS_TOKEN in config.settings[config.account]:
+                result = config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN]
+                if result and len(str(result)) > 0:
+                    return result
     return None
 
 
@@ -277,7 +280,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(self, value, section_name)
+                    value = encrypt(self, value)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)
