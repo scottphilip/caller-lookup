@@ -4,9 +4,8 @@ echo "SAVING LOGS..."
 ##################################################################################
 LOG_REPO="test-logs"
 PROJECT_REPO_NAME="caller-lookup"
-JOB_DIR="/home/travis/Logs"
+JOB_DIR="/home/travis/logs"
 GIT_DIR="/home/travis/github"
-BUILD_ARTIFACTS_ROOT="/home/travis/logs"
 REPO_PATH="${GITHUB_PASSWORD}@github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
 
