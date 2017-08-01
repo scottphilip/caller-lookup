@@ -4,7 +4,7 @@ echo "SAVING LOGS..."
 ##################################################################################
 WORKING_DIR="/home/travis/temp/"
 LOG_REPO="test-logs"
-REPO_PATH="github.com/${GITHUB_USERNAME}/${LOG_REPO}/.git"
+REPO_PATH="github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
 
 echo "WORKING PATH: ${WORKING_DIR}"
