@@ -280,7 +280,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(self, value)
+                    value = encrypt(self, value, section_name)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)
