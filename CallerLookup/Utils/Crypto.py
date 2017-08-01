@@ -22,9 +22,12 @@ PRIVATE_KEY_DIR_NAME = ".keys"
 
 def __get_system_key(account):
     try:
-        key = re.sub("\D", "", str(platform.uname()).upper())
+        key = ""
+        for item_name in platform.uname():
+            key += platform.uname()[item_name]
+        key = re.sub("[a-zA-Z0-9]", "", key.upper())
     except:
-        key = re.sub("\D", "", account.upper())
+        key = re.sub("[a-zA-Z0-9]", "", account.upper())
 
     if sys.version_info[0] >= 3:
         key_bytes = bytes(key, encoding=CallerLookupKeys.UTF8)
@@ -77,7 +80,7 @@ def __get_key(config, account=None):
                         {
                             "ACCOUNT": selected_account,
                             "KEY_PATH": key_path,
-                            "SYSTEM_KEY": (machine_id, system_key)
+                            "SYSTEM_KEY": (system_key_str, system_key)
                         })
 
 
