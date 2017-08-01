@@ -15,6 +15,9 @@ mkdir github
 
 echo "GIT PATH: ${GIT_ROOT}"
 cd "${GIT_ROOT}"
+git config user.email ${GITHUB_EMAIL}
+git config user.name ${GITHUB_USERNAME}
+git config user.password ${GITHUB_PASSWORD}
 git init .
 
 echo "ADDING TO GIT [${REPO_PATH}] ..."
