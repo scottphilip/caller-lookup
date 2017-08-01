@@ -46,6 +46,7 @@ def __get_key(config, account=None):
     h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
     system_key, machine_id = __get_system_key(selected_account)
+    log_debug(config, "SYSTEM_KEY", machine_id, system_key)
     f = Fernet(key=system_key)
     if not isfile(key_path):
         if not isdir(key_dir):
