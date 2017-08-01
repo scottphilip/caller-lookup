@@ -21,13 +21,14 @@ PRIVATE_KEY_DIR_NAME = ".keys"
 
 
 def __get_system_key(account):
+    pattern = "[^0-9a-zA-Z]+"
     try:
         key = ""
-        for item_name in platform.uname():
-            key += platform.uname()[item_name]
-        key = re.sub("[a-zA-Z0-9]", "", key.upper())
+        for index, item_name in enumerate(platform.uname()):
+            key += platform.uname()[index]
+        key = re.sub(pattern, "", key.upper())
     except:
-        key = re.sub("[a-zA-Z0-9]", "", account.upper())
+        key = re.sub(pattern, "", account.upper())
 
     if sys.version_info[0] >= 3:
         key_bytes = bytes(key, encoding=CallerLookupKeys.UTF8)
