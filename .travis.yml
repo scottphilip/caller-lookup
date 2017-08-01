@@ -17,8 +17,10 @@ script:
 - python setup.py test
 - python setup.py check --restructuredtext
 after_success:
+- chmod +x COPYLOGS.sh
 - COPYLOGS.sh
 after_failure:
+- chmod +x COPYLOGS.sh
 - COPYLOGS.sh
 env:
   global:
