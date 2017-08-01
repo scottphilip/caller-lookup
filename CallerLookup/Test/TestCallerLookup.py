@@ -17,17 +17,7 @@ class TestMain(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        from shutil import rmtree
         close_logger(cls.config.logger)
-        if cls.config.is_debug():
-            return
-        start_time = datetime.utcnow()
-        while os.path.isdir(cls.config.test_root_folder) \
-                and ((datetime.utcnow() - start_time).total_seconds() <= 10):
-            try:
-                rmtree(cls.config.test_root_folder)
-            except:
-                sleep(0.5)
 
     def validate_result(self, expected, actual):
         for key in expected[EXPECTED]:
