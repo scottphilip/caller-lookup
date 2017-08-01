@@ -14,7 +14,6 @@ echo "TEST JOB DATA DIRECTORY: ${LOG_JOB_PATH}"
 
 GIT_JOB_PATH="${GIT_DIR}/${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}"
 echo "GIT JOB DATA DIRECTORY: ${GIT_JOB_PATH}"
-mkdir -p ${GIT_JOB_PATH}
 
 cd "${GIT_DIR}"
 git init .
@@ -26,6 +25,7 @@ git clone https://${REPO_PATH}
 cd "${LOG_REPO}"
 
 echo "MOVING FILES... [${LOG_JOB_PATH} >> ${GIT_JOB_PATH}]"
+mkdir -p ${GIT_JOB_PATH}
 mv -v "${LOG_JOB_PATH}/*" "${GIT_JOB_PATH}"
 
 echo "ADDING FILES TO GIT... [${GIT_JOB_PATH}]"
