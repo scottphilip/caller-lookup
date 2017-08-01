@@ -6,7 +6,7 @@ LOG_REPO="test-logs"
 HOME_DIR="/home/travis"
 GIT_ROOT="/home/travis/github"
 BUILD_ARTIFACTS_ROOT="/home/travis/logs"
-REPO_PATH="github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
+REPO_PATH="git@github.com:${GITHUB_USERNAME}/${LOG_REPO}.git"
 PROJECT_REPO_NAME="${TRAVIS_REPO_SLUG}"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
 
@@ -17,8 +17,8 @@ echo "GIT PATH: ${GIT_ROOT}"
 cd "${GIT_ROOT}"
 git init .
 
-echo "ADDING TO GIT (https://${REPO_PATH}) ..."
-git clone https://${GITHUB_PASSWORD}@${REPO_PATH}
+echo "ADDING TO GIT [${REPO_PATH}] ..."
+git clone ${REPO_PATH}
 
 echo "MOVING FILES..."
 mkdir -p ${GIT_ROOT}/${LOG_REPO}/${PROJECT_REPO_NAME}
@@ -31,7 +31,7 @@ echo "COMMITTING CHANGES..."
 git commit -m ${MESSAGE}
 
 echo "UPLOADING FILES..."
-git remote add origin https://${GITHUB_PASSWORD}@${REPO_PATH}
+git remote add origin ${REPO_PATH}
 git push origin master
 
 echo "COMPLETE"
