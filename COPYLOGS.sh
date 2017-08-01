@@ -20,7 +20,7 @@ echo "WORKING PATH: ${WORKING_DIR}"
 cd "${WORKING_DIR}"
 
 ##################################################################################
-echo "ADDING TO GIT..."
+echo "ADDING TO GIT (${REPO_PATH}) ..."
 git clone git://${REPO_PATH}
 git remote
 git config user.email ${EMAIL}
