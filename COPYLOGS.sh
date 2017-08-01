@@ -26,7 +26,7 @@ cd "${LOG_REPO}"
 
 echo "MOVING FILES... [${LOG_JOB_PATH} >> ${GIT_JOB_PATH}]"
 mkdir -p ${GIT_JOB_PATH}
-mv -v "${LOG_JOB_PATH}/*" "${GIT_JOB_PATH}"
+mv -v "${LOG_JOB_PATH}"/* "${GIT_JOB_PATH}"
 
 echo "ADDING FILES TO GIT... [${GIT_JOB_PATH}]"
 git add "${GIT_JOB_PATH}"
