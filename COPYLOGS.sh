@@ -3,11 +3,11 @@
 echo "SAVING LOGS..."
 ##################################################################################
 LOG_REPO="test-logs"
+PROJECT_REPO_NAME="caller-lookup"
 HOME_DIR="/home/travis"
 GIT_ROOT="/home/travis/github"
 BUILD_ARTIFACTS_ROOT="/home/travis/logs"
 REPO_PATH="${GITHUB_PASSWORD}@github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
-PROJECT_REPO_NAME="${TRAVIS_REPO_SLUG}"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
 
 cd "${HOME_DIR}"
@@ -23,8 +23,8 @@ echo "ADDING TO GIT [https://${REPO_PATH}] ..."
 git clone https://${REPO_PATH}
 
 echo "MOVING FILES..."
-mkdir -p ${GIT_ROOT}/${LOG_REPO}/${PROJECT_REPO_NAME}
-mv ${BUILD_ARTIFACTS_ROOT}/* ${GIT_ROOT}/${LOG_REPO}/${PROJECT_REPO_NAME}/*
+mkdir -p ${LOG_REPO}/${PROJECT_REPO_NAME}
+mv -v ${BUILD_ARTIFACTS_ROOT}/* ${LOG_REPO}/${PROJECT_REPO_NAME}
 
 echo "ADDING FILES TO GIT..."
 git add ${LOG_REPO}/${PROJECT_REPO_NAME}/*
