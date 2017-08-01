@@ -13,6 +13,7 @@ from os.path import isdir, join, isfile
 from os import name as osname, makedirs
 import hashlib
 import socket
+import re
 
 
 INVALID_KEY = "INVALID_KEY"
@@ -21,9 +22,9 @@ PRIVATE_KEY_DIR_NAME = ".keys"
 
 def __get_system_key(account):
     try:
-        machine_id = socket.gethostname().upper()
+        machine_id = re.sub("\D", "", socket.gethostname().upper()[:10])
     except:
-        machine_id = account.upper()
+        machine_id = re.sub("\D", "", account.upper()[:10])
     if sys.version_info[0] >= 3:
         machine_id = bytes(machine_id, encoding=CallerLookupKeys.UTF8)
     else:
@@ -52,7 +53,7 @@ def __get_key(config, account=None):
         if not isdir(key_dir):
             makedirs(key_dir)
         key = Fernet.generate_key()
-        with open(key_path, "w+") as file:
+        with open(key_path, "w") as file:
             encoded = b64encode(key)
             file.write(f.encrypt(encoded).decode(CallerLookupKeys.UTF8))
         log_debug(config, "CRYPTO_KEY_CREATED", selected_account, key_path)
@@ -62,42 +63,59 @@ def __get_key(config, account=None):
                 ctypes.windll.kernel32.SetFileAttributesW(key_path, 0x02)
             except:
                 ignore = True
-    with open(key_path, "r+") as file:
+    with open(key_path, "r") as file:
         if sys.version_info[0] >= 3:
             data = bytes(file.read(), encoding=CallerLookupKeys.UTF8)
         else:
             data = bytes(file.read())
-        try:
-            decrypted = f.decrypt(data)
-            return b64decode(decrypted)
-        except InvalidToken as inner_ex:
-            raise Exception(INVALID_KEY, inner_ex.args,
-                            {
-                                "ACCOUNT": selected_account,
-                                "KEY_PATH": key_path,
-                                "SYSTEM_KEY": (machine_id, system_key)
-                            })
+    try:
+        decrypted = f.decrypt(data)
+        return b64decode(decrypted)
+    except InvalidToken as inner_ex:
+        raise Exception(INVALID_KEY, inner_ex.args,
+                        {
+                            "ACCOUNT": selected_account,
+                            "KEY_PATH": key_path,
+                            "SYSTEM_KEY": (machine_id, system_key)
+                        })
+
+
+def __get_decoded(str_value):
+    if sys.version_info[0] >= 3:
+        data = bytes(str_value, encoding=CallerLookupKeys.UTF8)
+    else:
+        data = bytes(str_value)
 
 
 def encrypt(config, plain_text, account=None):
-    if not plain_text:
-        return ""
-    from cryptography.fernet import Fernet
-    if sys.version_info[0] >= 3:
-        bytes_text = bytes(plain_text, encoding="utf-8")
-    else:
-        bytes_text = bytes(plain_text)
-    cipher_suite = Fernet(key=__get_key(config, account))
-    token = cipher_suite.encrypt(bytes_text)
-    return b64encode(token).decode(CallerLookupKeys.UTF8)
+    try:
+        if not plain_text:
+            return ""
+        from cryptography.fernet import Fernet
+        if sys.version_info[0] >= 3:
+            bytes_text = bytes(plain_text, encoding="utf-8")
+        else:
+            bytes_text = bytes(plain_text)
+        cipher_suite = Fernet(key=__get_key(config, account))
+        token = cipher_suite.encrypt(bytes_text)
+        return b64encode(token).decode(CallerLookupKeys.UTF8)
+    except Exception as ex:
+        log_error(config, "ENCRYPTION_ERROR", ex.args, ex)
+        return "ERROR {0}".format(str(ex.args))
 
 
 def decrypt(config, encrypted_text, account=None):
-    if not encrypted_text:
+    try:
+        if not encrypted_text:
+            return ""
+        if sys.version_info[0] >= 3:
+            data = b64decode(bytes(encrypted_text, encoding=CallerLookupKeys.UTF8))
+        else:
+            data = b64decode(bytes(encrypted_text))
+        cipher_suite = Fernet(key=__get_key(config, account))
+        return cipher_suite.decrypt(data).decode(CallerLookupKeys.UTF8)
+    except Exception as ex:
+        if config is None:
+            raise
+        log_error(config, "DECRYPTION_ERROR", ex.args, ex)
         return ""
-    if sys.version_info[0] >= 3:
-        data = b64decode(bytes(encrypted_text, encoding=CallerLookupKeys.UTF8))
-    else:
-        data = b64decode(bytes(encrypted_text))
-    cipher_suite = Fernet(key=__get_key(config, account))
-    return cipher_suite.decrypt(data).decode(CallerLookupKeys.UTF8)
