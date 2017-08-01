@@ -12,8 +12,8 @@ import sys
 from os.path import isdir, join, isfile
 from os import name as osname, makedirs
 import hashlib
-import socket
 import re
+import platform
 
 
 INVALID_KEY = "INVALID_KEY"
@@ -22,16 +22,17 @@ PRIVATE_KEY_DIR_NAME = ".keys"
 
 def __get_system_key(account):
     try:
-        machine_id = re.sub("\D", "", socket.gethostname().upper()[:10])
+        key = re.sub("\D", "", str(platform.uname()).upper())
     except:
-        machine_id = re.sub("\D", "", account.upper()[:10])
+        key = re.sub("\D", "", account.upper())
+
     if sys.version_info[0] >= 3:
-        machine_id = bytes(machine_id, encoding=CallerLookupKeys.UTF8)
+        key_bytes = bytes(key, encoding=CallerLookupKeys.UTF8)
     else:
-        machine_id = bytes(machine_id)
+        key_bytes = bytes(key)
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    digest.update(machine_id)
-    return urlsafe_b64encode(digest.finalize()), machine_id
+    digest.update(key_bytes)
+    return urlsafe_b64encode(digest.finalize()), key
 
 
 def __get_key(config, account=None):
@@ -46,8 +47,8 @@ def __get_key(config, account=None):
         account_bytes = bytes(selected_account)
     h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
-    system_key, machine_id = __get_system_key(selected_account)
-    log_debug(config, "SYSTEM_KEY", machine_id, system_key)
+    system_key, system_key_str = __get_system_key(selected_account)
+    log_debug(config, "SYSTEM_KEY", system_key_str, system_key)
     f = Fernet(key=system_key)
     if not isfile(key_path):
         if not isdir(key_dir):
@@ -78,13 +79,6 @@ def __get_key(config, account=None):
                             "KEY_PATH": key_path,
                             "SYSTEM_KEY": (machine_id, system_key)
                         })
-
-
-def __get_decoded(str_value):
-    if sys.version_info[0] >= 3:
-        data = bytes(str_value, encoding=CallerLookupKeys.UTF8)
-    else:
-        data = bytes(str_value)
 
 
 def encrypt(config, plain_text, account=None):
