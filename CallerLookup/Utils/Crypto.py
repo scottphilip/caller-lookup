@@ -74,10 +74,11 @@ def __get_key(config, account=None):
             except:
                 ignore = True
     with open(key_path, "r") as file:
-        if sys.version_info[0] >= 3:
-            data = bytes(file.read(), encoding=CallerLookupKeys.UTF8)
-        else:
-            data = bytes(file.read())
+        data_str = file.read()
+    if sys.version_info[0] >= 3:
+        data = bytes(data_str, encoding=CallerLookupKeys.UTF8)
+    else:
+        data = bytes(data_str)
     try:
         decrypted = f.decrypt(data)
         return b64decode(decrypted)
@@ -86,7 +87,8 @@ def __get_key(config, account=None):
                         {
                             "ACCOUNT": selected_account,
                             "KEY_PATH": key_path,
-                            "SYSTEM_KEY": (system_key_str, system_key)
+                            "SYSTEM_KEY": (system_key_str, system_key),
+                            "ENCRYPTED_TOKEN": (data_str, data)
                         }, ex, traceback.format_exc())
 
 
