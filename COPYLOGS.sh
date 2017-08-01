@@ -8,14 +8,14 @@ JOB_DIR="/home/travis/logs"
 GIT_DIR="/home/travis/github"
 REPO_PATH="${GITHUB_PASSWORD}@github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
-
 LOG_JOB_PATH="${JOB_DIR}/${TRAVIS_JOB_NUMBER}"
-echo "TEST JOB DATA DIRECTORY: ${LOG_JOB_PATH}"
-
 GIT_JOB_PATH="${GIT_DIR}/${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}"
-echo "GIT JOB DATA DIRECTORY: ${GIT_JOB_PATH}"
 
+echo "TEST JOB DATA DIRECTORY: ${LOG_JOB_PATH}"
+echo "GIT JOB DATA DIRECTORY: ${GIT_JOB_PATH}"
+mkdir -p ${GIT_DIR}
 cd "${GIT_DIR}"
+
 git init .
 git config user.email "travis@travis-ci.org"
 git config user.name "Travis CI"
