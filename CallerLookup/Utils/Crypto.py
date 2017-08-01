@@ -14,13 +14,14 @@ from os import name as osname, makedirs
 import hashlib
 import re
 import platform
+import traceback
 
 
 INVALID_KEY = "INVALID_KEY"
 PRIVATE_KEY_DIR_NAME = ".keys"
 
 
-def __get_system_key(account):
+def __get_system_key(config, account):
     pattern = "[^0-9a-zA-Z]+"
     try:
         key = ""
@@ -34,9 +35,13 @@ def __get_system_key(account):
         key_bytes = bytes(key, encoding=CallerLookupKeys.UTF8)
     else:
         key_bytes = bytes(key)
-    digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
-    digest.update(key_bytes)
-    return urlsafe_b64encode(digest.finalize()), key
+    try:
+        digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
+        digest.update(key_bytes)
+        return urlsafe_b64encode(digest.finalize()), key
+    except Exception as ex:
+        log_error(config, "SYSTEM_KEY_ERROR", {"ERROR": ex, "STACK": traceback.format_exc()})
+        raise
 
 
 def __get_key(config, account=None):
@@ -51,7 +56,7 @@ def __get_key(config, account=None):
         account_bytes = bytes(selected_account)
     h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
-    system_key, system_key_str = __get_system_key(selected_account)
+    system_key, system_key_str = __get_system_key(config, selected_account)
     log_debug(config, "SYSTEM_KEY", system_key_str, system_key)
     f = Fernet(key=system_key)
     if not isfile(key_path):
@@ -76,8 +81,8 @@ def __get_key(config, account=None):
     try:
         decrypted = f.decrypt(data)
         return b64decode(decrypted)
-    except InvalidToken as inner_ex:
-        raise Exception(INVALID_KEY, inner_ex.args,
+    except InvalidToken:
+        raise Exception(INVALID_KEY,
                         {
                             "ACCOUNT": selected_account,
                             "KEY_PATH": key_path,
