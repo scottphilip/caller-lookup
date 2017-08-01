@@ -14,7 +14,7 @@ import hashlib
 import socket
 
 
-INVALID_DECRYPTION_KEY = "INVALID_DECRYPTION_KEY"
+INVALID_KEY = "INVALID_KEY"
 PRIVATE_KEY_DIR_NAME = ".keys"
 
 
@@ -44,7 +44,8 @@ def __get_key(config, account=None):
         account_bytes = bytes(selected_account)
     h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
-    f = Fernet(key=__get_system_key(selected_account))
+    system_key = __get_system_key(selected_account)
+    f = Fernet(key=system_key)
     if not isfile(key_path):
         if not isdir(key_dir):
             makedirs(key_dir)
@@ -67,10 +68,11 @@ def __get_key(config, account=None):
             decrypted = f.decrypt(data)
             return b64decode(decrypted)
         except InvalidToken as inner_ex:
-            raise Exception(INVALID_DECRYPTION_KEY, inner_ex,
+            raise Exception(INVALID_KEY, inner_ex.args,
                             {
                                 "ACCOUNT": selected_account,
-                                "KEY_PATH": key_path
+                                "KEY_PATH": key_path,
+                                "SYSTEM_KEY": system_key
                             })
 
 

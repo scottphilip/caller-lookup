@@ -66,15 +66,17 @@ TEST_DATA = [
 FILENAME_TESTVARS = "TestVariables.json"
 
 
+def get_test_dir_path():
+    return os.path.join(_get_root_folder(), _get_build_id())
+
+
 def get_config():
     is_debug = False
     if "IS_DEBUG" in os.environ:
         is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    root_dir_path = os.path.join(_get_root_folder(),
-                                 ".CallerLookup_Test",
-                                 datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")[:-5])
+    root_dir_path = get_test_dir_path()
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
@@ -105,6 +107,12 @@ def _get_root_folder():
             if os.access(os.environ[var_name], os.W_OK):
                 return os.environ[var_name]
     return os.getcwd()
+
+
+def _get_build_id():
+    if "TRAVIS_JOB_NUMBER" in os.environ:
+        return os.environ["TRAVIS_JOB_NUMBER"]
+    return datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")
 
 
 def __get_logger(is_console=False):

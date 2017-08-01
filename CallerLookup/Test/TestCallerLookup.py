@@ -9,19 +9,23 @@ from CallerLookup.Main import lookup_number
 
 class TestMain(unittest.TestCase):
 
-    def setUp(self):
-        self.config = get_config()
+    config = None
 
-    def tearDown(self):
+    @classmethod
+    def setUpClass(cls):
+        cls.config = get_config()
+
+    @classmethod
+    def tearDownClass(cls):
         from shutil import rmtree
-        close_logger(self.config.logger)
-        if self.config.is_debug():
+        close_logger(cls.config.logger)
+        if cls.config.is_debug():
             return
         start_time = datetime.utcnow()
-        while os.path.isdir(self.config.test_root_folder) \
+        while os.path.isdir(cls.config.test_root_folder) \
                 and ((datetime.utcnow() - start_time).total_seconds() <= 10):
             try:
-                rmtree(self.config.test_root_folder)
+                rmtree(cls.config.test_root_folder)
             except:
                 sleep(0.5)
 
@@ -34,12 +38,18 @@ class TestMain(unittest.TestCase):
                              .format(key, actual[key], expected[EXPECTED][key], str(actual)))
 
     def test_main_lookup_number_0_success(self):
-        data = TEST_DATA[0]
-        result = lookup_number(number=data[PARAMETERS][NUMBER],
-                               region=data[PARAMETERS][REGION],
-                               region_dial_code=data[PARAMETERS][REGION_DIAL_CODE],
-                               config=self.config)
-        self.validate_result(data, result)
+        try:
+
+            data = TEST_DATA[0]
+            result = lookup_number(number=data[PARAMETERS][NUMBER],
+                                   region=data[PARAMETERS][REGION],
+                                   region_dial_code=data[PARAMETERS][REGION_DIAL_CODE],
+                                   config=self.config)
+            self.validate_result(data, result)
+
+        except:
+
+            raise
 
     # def test_main_lookup_number_1_success(self):
     #     data = TEST_DATA[1]
