@@ -81,13 +81,13 @@ def __get_key(config, account=None):
     try:
         decrypted = f.decrypt(data)
         return b64decode(decrypted)
-    except InvalidToken:
+    except InvalidToken as ex:
         raise Exception(INVALID_KEY,
                         {
                             "ACCOUNT": selected_account,
                             "KEY_PATH": key_path,
                             "SYSTEM_KEY": (system_key_str, system_key)
-                        })
+                        }, ex, traceback.format_exc())
 
 
 def encrypt(config, plain_text, account=None):
