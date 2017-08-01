@@ -64,14 +64,12 @@ TEST_DATA = [
     },
 ]
 FILENAME_TESTVARS = "TestVariables.json"
+LOG_DIR = "logs"
 REPO_NAME = "caller-lookup"
-TEMP_NAME = "temp"
 
 
 def get_test_dir_path():
-    test_dir_path = os.path.join(_get_root_folder(), TEMP_NAME)
-    os.environ["TEST_ROOT_PATH"] = test_dir_path
-    return os.path.join(test_dir_path, REPO_NAME, _get_build_id())
+    return os.path.join(_get_root_folder(), LOG_DIR, REPO_NAME, _get_build_id())
 
 
 def get_config():
