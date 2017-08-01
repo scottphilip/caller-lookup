@@ -67,7 +67,11 @@ def __get_key(config, account=None):
             decrypted = f.decrypt(data)
             return b64decode(decrypted)
         except InvalidToken as inner_ex:
-            raise Exception(INVALID_DECRYPTION_KEY, inner_ex)
+            raise Exception(INVALID_DECRYPTION_KEY, inner_ex,
+                            {
+                                "ACCOUNT": selected_account,
+                                "KEY_PATH": key_path
+                            })
 
 
 def encrypt(config, plain_text, account=None):
