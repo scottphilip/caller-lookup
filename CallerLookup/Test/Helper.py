@@ -64,10 +64,14 @@ TEST_DATA = [
     },
 ]
 FILENAME_TESTVARS = "TestVariables.json"
+REPO_NAME = "caller-lookup"
+TEMP_NAME = "temp"
 
 
 def get_test_dir_path():
-    return os.path.join(_get_root_folder(), _get_build_id())
+    test_dir_path = os.path.join(_get_root_folder(), TEMP_NAME)
+    os.environ["TEST_ROOT_PATH"] = test_dir_path
+    return os.path.join(test_dir_path, REPO_NAME, _get_build_id())
 
 
 def get_config():
@@ -104,8 +108,13 @@ def _get_root_folder():
     var_names = ["TRAVIS_BUILD_DIR", "TMPDIR", "TMP"]
     for var_name in var_names:
         if var_name in os.environ:
-            if os.access(os.environ[var_name], os.W_OK):
-                return os.environ[var_name]
+            cur_dir = os.environ[var_name]
+            while os.access(cur_dir, os.W_OK):
+                if os.access(os.path.dirname(cur_dir), os.W_OK):
+                    if cur_dir != os.path.dirname(cur_dir):
+                        cur_dir = os.path.dirname(cur_dir)
+                        continue
+                return cur_dir
     return os.getcwd()
 
 

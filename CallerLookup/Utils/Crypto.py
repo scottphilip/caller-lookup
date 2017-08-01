@@ -29,7 +29,7 @@ def __get_system_key(account):
         machine_id = bytes(machine_id)
     digest = hashes.Hash(hashes.SHA256(), backend=default_backend())
     digest.update(machine_id)
-    return urlsafe_b64encode(digest.finalize())
+    return urlsafe_b64encode(digest.finalize()), machine_id
 
 
 def __get_key(config, account=None):
@@ -44,7 +44,7 @@ def __get_key(config, account=None):
         account_bytes = bytes(selected_account)
     h.update(account_bytes)
     key_path = join(key_dir, ".{0}".format(h.hexdigest()))
-    system_key = __get_system_key(selected_account)
+    system_key, machine_id = __get_system_key(selected_account)
     f = Fernet(key=system_key)
     if not isfile(key_path):
         if not isdir(key_dir):
@@ -72,7 +72,7 @@ def __get_key(config, account=None):
                             {
                                 "ACCOUNT": selected_account,
                                 "KEY_PATH": key_path,
-                                "SYSTEM_KEY": system_key
+                                "SYSTEM_KEY": (machine_id, system_key)
                             })
 
 
