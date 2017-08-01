@@ -4,34 +4,35 @@ echo "SAVING LOGS..."
 ##################################################################################
 LOG_REPO="test-logs"
 PROJECT_REPO_NAME="caller-lookup"
-HOME_DIR="/home/travis"
-GIT_ROOT="/home/travis/github"
+JOB_DIR="/home/travis/Logs"
+GIT_DIR="/home/travis/github"
 BUILD_ARTIFACTS_ROOT="/home/travis/logs"
 REPO_PATH="${GITHUB_PASSWORD}@github.com/${GITHUB_USERNAME}/${LOG_REPO}.git"
 MESSAGE="${TRAVIS_COMMIT} (Job ${TRAVIS_JOB_NUMBER})"
 
-cd "${HOME_DIR}"
-mkdir github
+LOG_JOB_PATH="${JOB_DIR}/${TRAVIS_JOB_NUMBER}"
+echo "TEST JOB DATA DIRECTORY: ${LOG_JOB_PATH}"
 
-echo "GIT PATH: ${GIT_ROOT}"
-cd "${GIT_ROOT}"
+GIT_JOB_PATH="${GIT_DIR}/${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}"
+echo "GIT JOB DATA DIRECTORY: ${GIT_JOB_PATH}"
+mkdir -P ${GIT_JOB_PATH}
+
+cd "${GIT_DIR}"
 git init .
 git config user.email "travis@travis-ci.org"
 git config user.name "Travis CI"
 
 echo "ADDING TO GIT [https://${REPO_PATH}] ..."
 git clone https://${REPO_PATH}
+cd "${LOG_REPO}"
 
-echo "MOVING FILES..."
-mkdir -p "${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}"
-cd "${BUILD_ARTIFACTS_ROOT}/${TRAVIS_JOB_NUMBER}"
-mv -v * ${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}
-cd "${GIT_ROOT}"
+echo "MOVING FILES... [${LOG_JOB_PATH} >> ${GIT_JOB_PATH}]"
+mv -v "${LOG_JOB_PATH}" "${GIT_JOB_PATH}"
 
-echo "ADDING FILES TO GIT..."
-git add ${LOG_REPO}/${PROJECT_REPO_NAME}/${TRAVIS_JOB_NUMBER}
+echo "ADDING FILES TO GIT... [${GIT_JOB_PATH}]"
+git add "${GIT_JOB_PATH}"
 
-echo "COMMITTING CHANGES..."
+echo "COMMITTING CHANGES... [${MESSAGE}]"
 git commit -m ${MESSAGE}
 
 echo "UPLOADING FILES..."
