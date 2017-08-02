@@ -33,7 +33,7 @@ def format_number(config, phone_number, trunk_int_dial_code=None, trunk_country_
             result[CallerLookupLabel.REGION] = region_code_for_number(o)
             result[CallerLookupLabel.REGION_DIAL_CODE] = o.country_code
     except Exception as ex:
-        log_debug(config, ["FORMAT_NUMBER_ERROR", str(ex)])
+        log_debug(config, ["FORMAT_NUMBER_ERROR", str(ex), str(result)])
 
     return result
 

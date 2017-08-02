@@ -56,7 +56,7 @@ TEST_DATA = [
         PARAMETERS: {
             NUMBER: "12345",
             REGION: None,
-            REGION_DIAL_CODE: None
+            REGION_DIAL_CODE: "XX"
         },
         EXPECTED: {
             RESULT: INVALID_NUMBER,
@@ -67,17 +67,13 @@ FILENAME_TESTVARS = "TestVariables.json"
 LOG_DIR = "logs"
 
 
-def get_test_dir_path():
-    return os.path.join(_get_root_folder(), LOG_DIR, _get_build_id())
-
-
 def get_config():
     is_debug = False
     if "IS_DEBUG" in os.environ:
         is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    root_dir_path = get_test_dir_path()
+    root_dir_path = os.path.join(_get_root_folder(), LOG_DIR, _get_build_id())
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
