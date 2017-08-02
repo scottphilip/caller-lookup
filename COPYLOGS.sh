@@ -27,7 +27,7 @@ git init .
 git config user.email "travis@travis-ci.org"
 git config user.name "Travis CI"
 
-echo "ADDING TO GIT... [https://${REPO_PATH}] ..."
+echo "GIT CLONE... [https://${REPO_PATH}] ..."
 git clone https://${REPO_PATH}
 cd "${LOG_REPO}"
 
@@ -35,14 +35,22 @@ echo "MOVING FILES... [${LOG_JOB_PATH} >> ${GIT_JOB_PATH}]"
 mkdir -p ${GIT_JOB_PATH}
 mv -v "${LOG_JOB_PATH}"/* "${GIT_JOB_PATH}"
 
-echo "ADDING FILES TO GIT... [${GIT_JOB_PATH}]"
+echo "GIT ADD... [${GIT_JOB_PATH}]"
 git add "${GIT_JOB_PATH}"/*
 
-echo "COMMITTING CHANGES... [${MESSAGE}]"
+echo "GIT COMMIT... [${MESSAGE}]"
 git commit -m "${MESSAGE}"
 
-echo "UPLOADING FILES..."
+echo "GIT FETCH..."
+git fetch
+
+echo "GIT MERGE..."
+git merge origin/master
+
+echo "GIT REMOTE..."
 git remote add origin https://${REPO_PATH} > /dev/null 2>&1
+
+echo "GIT PUSH..."
 git push origin master
 
 echo "COMPLETE"
