@@ -3,14 +3,15 @@
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
-from os.path import join, isdir, isfile
+from os.path import join, isdir, isfile, dirname
 from os import makedirs
 from appdirs import AppDirs
 from datetime import datetime, timedelta
 from configparser import RawConfigParser
 from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys, CallerLookupReportMode
 from CallerLookup.Utils.Logs import *
-from CallerLookup.Utils.Crypto import encrypt, decrypt
+from GoogleToken.Crypto import encrypt as encrypt_value, decrypt as decrypt_value
+
 
 def __get_value(str_value):
     if str_value is None:
@@ -53,6 +54,14 @@ def __make_dir(config, path):
 
 def __get_config_file_path(self):
     return join(self.config_dir, "{0}.ini".format(CallerLookupKeys.APP_NAME))
+
+
+def encrypt(config, value, current_account):
+    return encrypt_value(value, current_account, config.data_dir, config.logger)
+
+
+def decrypt(config, value, current_account):
+    return decrypt_value(value, current_account, config.data_dir, config.logger)
 
 
 _DEFAULT_TEMPLATE = {

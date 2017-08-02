@@ -4,3 +4,4 @@
 TestVariables.json
 CallerLookup.egg-info/
 /.TestData/
+/CallerLookup/.Hidden/*
