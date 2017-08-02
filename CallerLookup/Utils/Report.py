@@ -40,7 +40,7 @@ class __CallerLookupReportManager(object):
                 "account text NOT NULL",
                 "number text NOT NULL",
                 "region text NULL",
-                "int_dial_code NOT NULL",
+                "int_dial_code NULL",
                 "result text NOT NULL",
                 "time_taken text NOT NULL"]
     }

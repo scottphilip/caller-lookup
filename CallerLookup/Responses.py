@@ -4,6 +4,7 @@
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
 from CallerLookup.Strings import CallerLookupLabel, CallerLookupKeys
+from CallerLookup.Utils.Logs import format_exception
 
 
 def get_response_invalid(number, region):
@@ -12,11 +13,9 @@ def get_response_invalid(number, region):
             CallerLookupLabel.REGION: region}
 
 
-def get_response_error(message, stack=None):
+def get_response_error(ex):
     result = {CallerLookupLabel.RESULT: CallerLookupLabel.ERROR,
-              CallerLookupLabel.MESSAGE: message}
-    if stack is not None:
-        result.update({CallerLookupLabel.STACK: stack})
+              CallerLookupLabel.MESSAGE: format_exception(ex)}
     return result
 
 

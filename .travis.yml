@@ -16,9 +16,16 @@ script:
 - pip install docutils
 - python setup.py test
 - python setup.py check --restructuredtext
+after_success:
+- chmod +x COPYLOGS.sh
+- "./COPYLOGS.sh"
+after_failure:
+- chmod +x COPYLOGS.sh
+- "./COPYLOGS.sh"
 env:
   global:
   - IS_DEBUG=True
+  - secure: RfLhjDXjG6Fak8rCa9KIIhsGMjQzgYL3TTpoSGEWZdfHUFt1R/XDf2ddbpcldwdYlJsTxkl5lCNnUeW445o2FTZNVCifZb113vKE/q5h25jgsKfVa+Ugv90rgQaX2YygVGY/wRPdIPiVDSpz4hi1OQ8eWAXQWjBNpYCs44DjZPHApI738CAU486LYPaZDQ1GXWnrYUjauVxCupLabW90pUd5lgH28zHe8pX+V0EMgt80nBDnwIBgGyu3uK2fV6v20TLptfNEOOxUlaIIJcHE/yp7H3RgvSsEeSmbfIfcDsMrVmO8AhH/jVFmF9vfp9Xy1J31t52OBLrP4MGsu2Fa33EdHfi9UVGSep7UOZDKFd/UXzGJaDzsnNGojQ/4nsNkvStHt7aM1LVH5JTrcQL1SY+VdWtLEoS62ll8p1Al8dMDmtbv6Tfxp0cv05i/UA0SCB8kK5offDGgls5sP3zo/0Ek4AIwFgKKUNHtt3DgWKtkz5W23p1BSH8mNIL+GltrA0nf/7fiZ3lH5Nmyg0677QhQpRfaudtSqUNlLloWjwBEtBWlQ0UgT7W48zpkAVcm6NOvYfeM6xvgvEa3XaA09H+AEnmXgEwPkTB8rmzcSIIlYFN8pc1ImP/X2WFDOgfxHSuNAaeAq1iJGMOoyPwOzHG/GbHDh4CXyvcgs+UdSuc=
 deploy:
   provider: pypi
   user: scottphilip

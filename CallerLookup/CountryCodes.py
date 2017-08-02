@@ -1428,3 +1428,12 @@ class CallerLookupCountryCodes(object):
                     results.append(entry)
 
         return results
+
+
+def get_region_dial_code(region):
+    data = CallerLookupCountryCodes.get_country_data(country_code=region)
+    if data is None or len(data) == 0:
+        return None
+    if len(data) > 1:
+        raise Exception("Multiple Regions Found")
+    return data[0]["COUNTRY_INT_DIAL_CODE"]

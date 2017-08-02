@@ -8,6 +8,7 @@ from CallerLookup.Utils.Cache import *
 from CallerLookup.Utils.Http import *
 from GoogleToken import get_google_token
 from json import dumps, loads
+import traceback
 try:
     from urllib.parse import urlencode
 except ImportError:
@@ -19,6 +20,11 @@ HTTP_HEADERS = {
 }
 
 
+class RetryException(Exception):
+    def __init__(self, *args):
+        super(RetryException, self).__init__(*args)
+
+
 def run_search(config, number_data):
     attempt = 0
     while True:
@@ -26,15 +32,17 @@ def run_search(config, number_data):
         try:
             result = get_search_response_data(config, number_data)
             return result
-        except Exception as ex:
+        except RetryException as ex:
             if attempt >= 3:
                 raise
-            log_debug(config, "SEARCH ERROR", {"ATTEMPT": attempt, "ERROR": str(ex)})
+            log_debug(config, "RETRY", {"ATTEMPT": attempt,
+                                        "ERROR": format_exception(ex)})
             config.clear_cached_token()
 
 
 def get_search_response_data(config, number_data):
     try:
+
         auth_token = get_auth_token(config)
         query = {CallerLookupKeys.KEY_TYPE: CallerLookupKeys.KEY_TYPE_VALUE,
                  CallerLookupKeys.KEY_COUNTRY_CODE: number_data[CallerLookupLabel.REGION],
@@ -43,15 +51,14 @@ def get_search_response_data(config, number_data):
         headers.update({"Authorization": "Bearer {0}".format(auth_token)})
         with CallerLookupHttp(config) as http:
             res_code, res_headers, res_data = http.get(CallerLookupKeys.URL_SEARCH + urlencode(query), headers)
-        if res_code is not 200:
-            raise Exception(CallerLookupErrors.INVALID_RESPONSE_CODE)
-        return loads(res_data)
-    except Exception as ex:
-        config.clear_cached_token()
-        import traceback
-        log_debug(config, {"SEARCH_DATA_ERROR": {"ERROR": str(ex),
-                                                 "STACK": traceback.format_exc()}})
-        raise
+        if res_code == 200:
+            return loads(res_data)
+        raise RetryException("INVALID STATUS CODE", res_code)
+
+    except HttpException as ex:
+        if ex.status_code == 403:
+            raise
+        raise RetryException(ex)
 
 
 def get_auth_token(config):
@@ -70,7 +77,6 @@ def get_auth_token(config):
             raise Exception(CallerLookupErrors.ACCESS_TOKEN_NOT_FOUND)
         auth_token = token_obj[CallerLookupKeys.KEY_ACCESS_TOKEN]
         config.set_cached_token(auth_token)
-    log_debug(config, "AUTH_TOKEN", auth_token)
     return str(auth_token)
 
 

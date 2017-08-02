@@ -3,14 +3,15 @@
 # Source:       https://github.com/scottphilip/caller-lookup/
 # Licence:      GNU GENERAL PUBLIC LICENSE (Version 3, 29 June 2007)
 
-from os.path import join, isdir, isfile
+from os.path import join, isdir, isfile, dirname
 from os import makedirs
 from appdirs import AppDirs
 from datetime import datetime, timedelta
 from configparser import RawConfigParser
 from CallerLookup.Strings import CallerLookupConfigStrings, CallerLookupKeys, CallerLookupReportMode
 from CallerLookup.Utils.Logs import *
-from CallerLookup.Utils.Crypto import encrypt, decrypt
+from GoogleToken.Crypto import encrypt as encrypt_value, decrypt as decrypt_value
+
 
 def __get_value(str_value):
     if str_value is None:
@@ -53,6 +54,14 @@ def __make_dir(config, path):
 
 def __get_config_file_path(self):
     return join(self.config_dir, "{0}.ini".format(CallerLookupKeys.APP_NAME))
+
+
+def encrypt(config, value, current_account):
+    return encrypt_value(value, current_account, config.data_dir, config.logger)
+
+
+def decrypt(config, value, current_account):
+    return decrypt_value(value, current_account, config.data_dir, config.logger)
 
 
 _DEFAULT_TEMPLATE = {
@@ -157,7 +166,10 @@ def _get_cached_token(config):
     if CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY in config.settings[config.account]:
         if datetime.strptime(config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN_EXPIRY],
                              CallerLookupKeys.DATETIME_FMT) > datetime.utcnow():
-            return config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN]
+            if CallerLookupConfigStrings.ACCESS_TOKEN in config.settings[config.account]:
+                result = config.settings[config.account][CallerLookupConfigStrings.ACCESS_TOKEN]
+                if result and len(str(result)) > 0:
+                    return result
     return None
 
 
@@ -240,7 +252,7 @@ def _init_config(self, **kwargs):
                 if setting_name in config_file[section_name]:
                     value = config_file[section_name][setting_name]
                     if setting_name in __ENCRYPT:
-                        value = decrypt(section_name, value, self.data_dir)
+                        value = decrypt(self, value, section_name)
                     self.settings[section_name][setting_name] = __get_value(value)
     for key in kwargs.keys():
         if key.upper() in _DEFAULT_TEMPLATE:
@@ -277,7 +289,7 @@ def _save(self):
             if self.settings[section_name][setting_name] is not None:
                 value = str(self.settings[section_name][setting_name])
                 if setting_name in __ENCRYPT:
-                    value = encrypt(section_name, value, self.data_dir)
+                    value = encrypt(self, value, section_name)
                 config_file[section_name][setting_name] = str(value)
     with open(__get_config_file_path(self), "w") as file:
         config_file.write(file)

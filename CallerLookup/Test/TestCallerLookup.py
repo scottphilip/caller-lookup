@@ -9,24 +9,15 @@ from CallerLookup.Main import lookup_number
 
 class TestMain(unittest.TestCase):
 
-    def setUp(self):
-        self.config = get_config()
+    config = None
 
-    def tearDown(self):
-        from shutil import rmtree
-        close_logger(self.config.logger)
-        if self.config.is_debug():
-            path = os.path.join(self.config.log_dir, "CallerLookup.log")
-            if os.path.isfile(path):
-                with open(path) as file:
-                    print(file.read())
-        start_time = datetime.utcnow()
-        while os.path.isdir(self.config.test_root_folder) \
-                and ((datetime.utcnow() - start_time).total_seconds() <= 10):
-            try:
-                rmtree(self.config.test_root_folder)
-            except:
-                sleep(0.5)
+    @classmethod
+    def setUpClass(cls):
+        cls.config = get_config()
+
+    @classmethod
+    def tearDownClass(cls):
+        close_logger(cls.config.logger)
 
     def validate_result(self, expected, actual):
         for key in expected[EXPECTED]:
@@ -37,12 +28,18 @@ class TestMain(unittest.TestCase):
                              .format(key, actual[key], expected[EXPECTED][key], str(actual)))
 
     def test_main_lookup_number_0_success(self):
-        data = TEST_DATA[0]
-        result = lookup_number(number=data[PARAMETERS][NUMBER],
-                               region=data[PARAMETERS][REGION],
-                               region_dial_code=data[PARAMETERS][REGION_DIAL_CODE],
-                               config=self.config)
-        self.validate_result(data, result)
+        try:
+
+            data = TEST_DATA[0]
+            result = lookup_number(number=data[PARAMETERS][NUMBER],
+                                   region=data[PARAMETERS][REGION],
+                                   region_dial_code=data[PARAMETERS][REGION_DIAL_CODE],
+                                   config=self.config)
+            self.validate_result(data, result)
+
+        except:
+
+            raise
 
     def test_main_lookup_number_1_success(self):
         data = TEST_DATA[1]

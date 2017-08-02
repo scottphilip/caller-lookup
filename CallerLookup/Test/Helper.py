@@ -1,8 +1,6 @@
 import os
-import sys
 import json
 from datetime import datetime
-from appdirs import AppDirs
 from logging import getLogger, ERROR as LOG_ERROR, StreamHandler, Formatter, basicConfig
 from CallerLookup.Strings import CallerLookupKeys
 from CallerLookup.Configuration import CallerLookupConfiguration
@@ -58,7 +56,7 @@ TEST_DATA = [
         PARAMETERS: {
             NUMBER: "12345",
             REGION: None,
-            REGION_DIAL_CODE: None
+            REGION_DIAL_CODE: "XX"
         },
         EXPECTED: {
             RESULT: INVALID_NUMBER,
@@ -66,6 +64,7 @@ TEST_DATA = [
     },
 ]
 FILENAME_TESTVARS = "TestVariables.json"
+LOG_DIR = "logs"
 
 
 def get_config():
@@ -74,10 +73,7 @@ def get_config():
         is_debug = bool(str(os.environ["IS_DEBUG"]))
     test_data = __get_test_var_data()
     account_email = test_data["username"]
-    root_dir_path = "/home/travis/build/scottphilip/caller-lookup/"
-    root_dir_path = os.path.join(root_dir_path,
-                                 ".TestData",
-                                 datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")[:-5])
+    root_dir_path = os.path.join(_get_root_folder(), LOG_DIR, _get_build_id())
     config_dir = os.path.join(root_dir_path, "Config")
     if not os.path.isdir(config_dir):
         os.makedirs(config_dir)
@@ -99,6 +95,26 @@ def get_config():
                                        is_debug=is_debug)
     config.test_root_folder = root_dir_path
     return config
+
+
+def _get_root_folder():
+    var_names = ["TRAVIS_BUILD_DIR", "TMPDIR", "TMP"]
+    for var_name in var_names:
+        if var_name in os.environ:
+            cur_dir = os.environ[var_name]
+            while os.access(cur_dir, os.W_OK):
+                if os.access(os.path.dirname(cur_dir), os.W_OK):
+                    if cur_dir != os.path.dirname(cur_dir):
+                        cur_dir = os.path.dirname(cur_dir)
+                        continue
+                return cur_dir
+    return os.getcwd()
+
+
+def _get_build_id():
+    if "TRAVIS_JOB_NUMBER" in os.environ:
+        return os.environ["TRAVIS_JOB_NUMBER"]
+    return datetime.utcnow().strftime("%Y-%m-%d_%H-%M-%S-%f")
 
 
 def __get_logger(is_console=False):
