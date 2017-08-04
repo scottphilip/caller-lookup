@@ -1,6 +1,12 @@
 .. image:: https://travis-ci.org/scottphilip/caller-lookup.svg?branch=master
    :target: https://travis-ci.org/scottphilip/caller-lookup
 
+.. image:: https://img.shields.io/pypi/v/CallerLookup.svg
+   :target: https://pypi.python.org/pypi/CallerLookup
+
+.. image:: https://img.shields.io/pypi/pyversions/CallerLookup.svg
+   :target: https://pypi.python.org/pypi/CallerLookup
+
 Caller Lookup
 =============
 
