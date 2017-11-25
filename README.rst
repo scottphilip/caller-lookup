@@ -10,7 +10,7 @@
 Caller Lookup
 =============
 
-Wrapper for TrueCaller
+Looks up any telephone number and returns known information about owner, including a score attribute that helps determine if the call is genuine or a marketing cold caller.  This is helpful for looking up a caller id number before accepting.
 
 Installation Instructions
 -------------------------
