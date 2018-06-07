@@ -1,5 +1,5 @@
 import os
-from setuptools import setup
+from setuptools import setup, find_packages
 
 VERSION = (1, 2)
 
@@ -26,7 +26,7 @@ setup(
     url='http://github.com/scottphilip/caller-lookup',
     author='Scott Philip',
     author_email='sp@scottphilip.com',
-    packages=['CallerLookup'],
+    packages=find_packages(),
     version=get_version_number(),
     install_requires=read('REQUIREMENTS.txt').splitlines(),
     test_suite='nose.collector',
